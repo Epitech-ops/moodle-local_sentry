@@ -45,8 +45,6 @@ function local_sentry_init_sentry() {
           'dsn' => $CFG->sentry_dsn,
           'environment' => 'testing',
           'release' => '123919',
-          'sample_rate' => 1.0,
-          'traces_sample_rate' => 1.0,
 				];
 				if(local_sentry_tracing_enabled()) {
 						$options['sample_rate'] = 1.0;
