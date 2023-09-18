@@ -48,7 +48,7 @@ function local_sentry_init_sentry() {
 				];
 				if(local_sentry_tracing_enabled()) {
 						$options['sample_rate'] = 1.0;
-						$options['traces_sample_rate'] => 1.0;
+						$options['traces_sample_rate'] = 1.0;
 				}
         require $CFG->sentry_autoload_path;
         \Sentry\init($options);
