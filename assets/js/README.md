@@ -1,0 +1,1 @@
+https://github.com/getsentry/sentry-javascript/releases/download/6.19.6/sentry-browser-6.19.6.tgz

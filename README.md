@@ -10,9 +10,14 @@ Prerequisites:
 // SENTRY SETUP
 //=========================================================================
 //
-$CFG->sentry_autoload_path = "/srv/composer/vendor/autoload.php";
-$CFG->sentry_dsn = 'https://id-string@sentry.server.si/project-id';
-$CFG->sentry_tracing_hosts = ['localhost'];
+$CFG->forced_plugin_settings['local_sentry']['autoload_path'] = '/srv/composer/vendor/autoload.php';
+$CFG->forced_plugin_settings['local_sentry']['dsn'] = 'https://id-string@localhost/1';
+$CFG->forced_plugin_settings['local_sentry']['tracking_javascript'] = 1;
+$CFG->forced_plugin_settings['local_sentry']['tracking_php'] = 1;
+$CFG->forced_plugin_settings['local_sentry']['tracing_db'] = 1;
+$CFG->forced_plugin_settings['local_sentry']['tracing_hosts'] = '*';
+$CFG->forced_plugin_settings['local_sentry']['environment'] = 'testing';
+$CFG->forced_plugin_settings['local_sentry']['release'] = '1';
 ```
 
 

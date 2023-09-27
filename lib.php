@@ -19,88 +19,42 @@
  * @copyright  2023, ARNES
  */
 defined('MOODLE_INTERNAL') || die();
-require_once(__DIR__.'/sentry_moodle_database.php');
 
-function local_sentry_exception_handler($ex) {
-	if(function_exists('\Sentry\captureException')) {
-		\Sentry\captureException($ex);
-	}
-	// Use the default exception handler afterwards
-	default_exception_handler($ex);
-}
-
-function local_sentry_init_sentry() {
-	global $CFG;
-	// $CFG->sentry_autoload_path = "/srv/composer/vendor/autoload.php";
-	// $CFG->sentry_dsn = 'https://id-string@sentry.server.si/project-id';
-	// $CFG->sentry_tracing_hosts = ['moodle.server.si'];
-	if(!defined('MDL_SENTRY_INITIALIZED')) {
-	    define('MDL_SENTRY_INITIALIZED', true);
-	    if(file_exists($CFG->sentry_autoload_path)) {
-		    require_once($CFG->sentry_autoload_path);
-		    if(!function_exists('\Sentry\init')) {
-	    	    	return;
-		    }
-	    	    $options = [
-		          'dsn' => $CFG->sentry_dsn,
-	        	  'environment' => 'testing',
-		          'release' => '401',
-		    ];
-		    if(local_sentry_tracing_enabled()) {
-			$options['sample_rate'] = 1.0;
-			$options['traces_sample_rate'] = 1.0;
-		    }
-	           \Sentry\init($options);
-	       }
-	}
-}
-
-function local_sentry_tracing_enabled() {
-	global $CFG;
-	return true;
-	return !empty($CFG->sentry_tracing_hosts) && in_array($_SERVER['SERVER_NAME'], $CFG->sentry_tracing_hosts);
-}
-
-function local_sentry_start_main_transaction() {
-	global $sentry_transaction;
-
-	if(!function_exists('\Sentry\startTransaction')) {
-		// Sentry not loaded in config.php
-		return;
-	}
-
-	$uri = $_SERVER['REQUEST_URI'];
-	$uri = empty($_SERVER['REQUEST_URI']) ? 'UNKNOWN' : $_SERVER['REQUEST_URI'];
-	$transactionContext = new \Sentry\Tracing\TransactionContext(
-		$name = $uri,
-		$parentSampled = false
-	);
-	$transactionContext->setSampled(true);
-
-	$sentry_transaction = \Sentry\startTransaction($transactionContext);
-	return $sentry_transaction;
-}
+require_once(__DIR__ . '/classes/sentry.php');
 
 function local_sentry_before_session_start() {
 	global $CFG, $DB;
-	local_sentry_init_sentry();
-	if(!function_exists('\Sentry\captureException')) {
-		// Sentry not loaded in config.php
-		return;
-	}
-	set_exception_handler('local_sentry_exception_handler');
-	
-	if(!local_sentry_tracing_enabled()) {
-		return;
-	}
-
-	$DB = new sentry_moodle_database(false, $DB);
-	local_sentry_start_main_transaction();
+	\local_sentry\sentry::setup();
+	\local_sentry\sentry::start_main_transaction();
 }
 
 function local_sentry_before_footer() {
-	global $sentry_transaction;
-	if(!empty($sentry_transaction)) {
-		$sentry_transaction->finish();
+	\local_sentry\sentry::finish_main_transaction();
+}
+
+/**
+ * Serve the Sentry loader with defined parameters
+ * when requested.
+ *
+ * @param stdClass $course the course object
+ * @param stdClass $cm the course module object
+ * @param stdClass $context the context
+ * @param string $filearea the name of the file area
+ * @param array $args extra arguments (itemid, path)
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
+ * @return bool false if the file not found, just send the file otherwise and do not return anything
+ */
+function local_sentry_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+	return \local_sentry\sentry::pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, $options);
+}
+
+/**
+ * Add Sentry loader Javascript to the HTML head.
+ */
+function local_sentry_before_standard_html_head() {
+	if(!empty(\local_sentry\sentry::get_config('tracking_javascript'))) {
+		return \local_sentry\sentry::get_js_loader_script_html();
 	}
+	return '';
 }
