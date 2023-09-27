@@ -144,6 +144,7 @@ class sentry_moodle_database extends moodle_database {
 
 		public function new_span($op) {
 				global $sentry_transaction;
+				$parent_transaction = \Sentry\SentrySdk::getCurrentHub()->getSpan();
 				$spanCtx = new \Sentry\Tracing\SpanContext();
 				$spanCtx->setOp($op);
 				$backtrace = debug_backtrace();
@@ -152,7 +153,11 @@ class sentry_moodle_database extends moodle_database {
 						'stacktrace' => $backtrace
 				]);
 				$spanCtx->setSampled(true);
-				$span = $sentry_transaction->startChild($spanCtx);
+				if(!empty($parent_transaction)) {
+					$span = $parent_transaction->startChild($spanCtx);
+				} else {
+					$span = $sentry_transaction->startChild($spanCtx);
+				}
 				\Sentry\SentrySdk::getCurrentHub()->setSpan($span);
 				return $span;
 		}
@@ -160,7 +165,7 @@ class sentry_moodle_database extends moodle_database {
 		public function finish_span($span) {
 				global $sentry_transaction;
 				$span->finish();
-				\Sentry\SentrySdk::getCurrentHub()->setSpan($transaction);
+				\Sentry\SentrySdk::getCurrentHub()->setSpan($sentry_transaction);
 		}
     /**
      * Detects if all needed PHP stuff are installed for DB connectivity.
@@ -203,6 +208,9 @@ class sentry_moodle_database extends moodle_database {
         return $this->db->get_dbvendor();
     }
 
+		public function get_dbcollation() {
+        return $this->db->get_dbcollation();
+    }
     /**
      * Returns the database family type. (This sort of describes the SQL 'dialect')
      * Note: can be used before connect()

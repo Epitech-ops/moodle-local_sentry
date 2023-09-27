@@ -19,7 +19,6 @@
  * @copyright  2023, ARNES
  */
 defined('MOODLE_INTERNAL') || die();
-
 require_once(__DIR__.'/sentry_moodle_database.php');
 
 function local_sentry_exception_handler($ex) {
@@ -31,33 +30,34 @@ function local_sentry_exception_handler($ex) {
 }
 
 function local_sentry_init_sentry() {
-	if(!function_exists('\Sentry\init')) {
-		return;
-	}
-
+	global $CFG;
 	// $CFG->sentry_autoload_path = "/srv/composer/vendor/autoload.php";
 	// $CFG->sentry_dsn = 'https://id-string@sentry.server.si/project-id';
 	// $CFG->sentry_tracing_hosts = ['moodle.server.si'];
 	if(!defined('MDL_SENTRY_INITIALIZED')) {
-    define('MDL_SENTRY_INITIALIZED', true);
-		if(file_exists($CFG->sentry_autoload_path)) {
-				$options = [
-          'dsn' => $CFG->sentry_dsn,
-          'environment' => 'testing',
-          'release' => '123919',
-				];
-				if(local_sentry_tracing_enabled()) {
-						$options['sample_rate'] = 1.0;
-						$options['traces_sample_rate'] = 1.0;
-				}
-        require $CFG->sentry_autoload_path;
-        \Sentry\init($options);
-    }
+	    define('MDL_SENTRY_INITIALIZED', true);
+	    if(file_exists($CFG->sentry_autoload_path)) {
+		    require_once($CFG->sentry_autoload_path);
+		    if(!function_exists('\Sentry\init')) {
+	    	    	return;
+		    }
+	    	    $options = [
+		          'dsn' => $CFG->sentry_dsn,
+	        	  'environment' => 'testing',
+		          'release' => '401',
+		    ];
+		    if(local_sentry_tracing_enabled()) {
+			$options['sample_rate'] = 1.0;
+			$options['traces_sample_rate'] = 1.0;
+		    }
+	           \Sentry\init($options);
+	       }
 	}
 }
 
 function local_sentry_tracing_enabled() {
 	global $CFG;
+	return true;
 	return !empty($CFG->sentry_tracing_hosts) && in_array($_SERVER['SERVER_NAME'], $CFG->sentry_tracing_hosts);
 }
 
@@ -70,7 +70,7 @@ function local_sentry_start_main_transaction() {
 	}
 
 	$uri = $_SERVER['REQUEST_URI'];
-	$uri = empty($uri) ? 'UNKNOWN' : $uri;
+	$uri = empty($_SERVER['REQUEST_URI']) ? 'UNKNOWN' : $_SERVER['REQUEST_URI'];
 	$transactionContext = new \Sentry\Tracing\TransactionContext(
 		$name = $uri,
 		$parentSampled = false
@@ -83,6 +83,7 @@ function local_sentry_start_main_transaction() {
 
 function local_sentry_before_session_start() {
 	global $CFG, $DB;
+	local_sentry_init_sentry();
 	if(!function_exists('\Sentry\captureException')) {
 		// Sentry not loaded in config.php
 		return;
@@ -100,7 +101,6 @@ function local_sentry_before_session_start() {
 function local_sentry_before_footer() {
 	global $sentry_transaction;
 	if(!empty($sentry_transaction)) {
-		error_log('sentry traced the exception');
 		$sentry_transaction->finish();
 	}
 }
