@@ -22,12 +22,18 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/classes/sentry.php');
 
+/**
+ * A callback that runs as early as possible in Moodle.
+ */
 function local_sentry_before_session_start() {
 	global $CFG, $DB;
 	\local_sentry\sentry::setup();
 	\local_sentry\sentry::start_main_transaction();
 }
 
+/**
+ * The last guaranteed callback to be run.
+ */
 function local_sentry_before_footer() {
 	\local_sentry\sentry::finish_main_transaction();
 }
