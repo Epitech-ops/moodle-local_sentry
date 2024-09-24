@@ -1213,8 +1213,8 @@ class sentry_moodle_database extends \moodle_database {
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
 		public function get_records_list($table, $field, array $values, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-			$span = $this->new_span('get_records_list', $table, ['db.conditions' => implode(' = ?, ', array_keys()).' = ?', 'db.field' => $field, 'db.fields' => $fields]);
-			
+			$span = $this->new_span('get_records_list', $table, ['db.conditions' => implode(' = ?, ', array_keys($values)).' = ?', 'db.field' => $field, 'db.fields' => $fields]);
+
 			return $this->finish_span(
                 $this->db->get_records_list($table, $field, $values, $sort, $fields, $limitfrom, $limitnum)
             );
@@ -2011,7 +2011,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return string The piece of SQL code to be used in your statement.
      */
     public function sql_compare_text($fieldname, $numchars=32) {
-        return $this->sql_compare_text($fieldname, $numchars);
+        return $this->db->sql_compare_text($fieldname, $numchars);
     }
 
     /**
