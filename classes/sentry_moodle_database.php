@@ -2011,7 +2011,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return string The piece of SQL code to be used in your statement.
      */
     public function sql_compare_text($fieldname, $numchars=32) {
-        return $this->sql_compare_text($fieldname, $numchars);
+        return $this->db->sql_compare_text($fieldname, $numchars);
     }
 
     /**
