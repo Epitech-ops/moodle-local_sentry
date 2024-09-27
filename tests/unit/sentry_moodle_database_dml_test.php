@@ -4312,7 +4312,7 @@ EOD;
         $DB = $this->tdb;
         $dbman = $DB->get_manager();
 
-        if($DB->get_dbfamily() == 'pgsql') {
+        if($DB->get_dbfamily() == 'postgres') {
 		// Do not run on pgsql, returns
 		// Error reading from database
 		// (ERROR:  could not determine data type of parameter $1)
@@ -4476,6 +4476,14 @@ EOD;
         $DB = $this->tdb;
         $dbman = $DB->get_manager();
 
+	if($DB->get_dbfamily() == 'postgres') {
+		// Do not run on pgsql, returns
+		// Error reading from database
+		// (ERROR:  could not determine data type of parameter $1)
+		// Maybe fix upstream?
+		return;
+	}
+
         $table = $this->get_test_table();
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
         $table->add_field('intfield', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
@@ -4556,14 +4564,6 @@ EOD;
     public function test_group_concat_join_tables(): void {
         $DB = $this->tdb;
         $dbman = $DB->get_manager();
-
-        if($DB->get_dbfamily() == 'pgsql') {
-		// Do not run on pgsql, returns
-		// Error reading from database
-		// (ERROR:  could not determine data type of parameter $1)
-		// Maybe fix upstream?
-		return;
-	}
 
         $tableparent = $this->get_test_table('parent');
         $tableparent->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
