@@ -200,7 +200,7 @@ class sentry_moodle_database extends \moodle_database {
      */
 	public static function get_driver_instance($type, $library, $external = false) {
         if(!empty(self::$_db)) {
-            return self::$_db->get_driver_instance($type, $library, $external = false);
+            return self::$_db->get_driver_instance($type, $library, $external);
         }
         return parent::get_driver_instance($type, $library, $external);
     }
