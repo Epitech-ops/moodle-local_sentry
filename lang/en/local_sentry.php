@@ -42,3 +42,5 @@ $string['tracing_db'] = 'Database Tracing';
 $string['tracing_db_desc'] = 'Enable tracing database operations';
 $string['tracing_hosts'] = 'Tracing Hosts';
 $string['tracing_hosts_desc'] = 'Enable tracing operations on a list of servers, separated by commas. Use "<i>*</i>" to enable tracing on all hosts.';
+$string['include_user_data'] = 'Include User Data';
+$string['include_user_data_desc'] = 'Include user ID, username and email in Sentry events.';
