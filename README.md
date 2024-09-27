@@ -23,6 +23,7 @@ $CFG->forced_plugin_settings['local_sentry']['tracing_db'] = 1;
 $CFG->forced_plugin_settings['local_sentry']['tracing_hosts'] = '*';
 $CFG->forced_plugin_settings['local_sentry']['environment'] = 'testing';
 $CFG->forced_plugin_settings['local_sentry']['release'] = '1';
+$CFG->forced_plugin_settings['local_sentry']['include_user_data'] = 1;
 ```
 
 ## Features
