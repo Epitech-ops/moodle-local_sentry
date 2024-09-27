@@ -40,5 +40,17 @@ Javascript error tracking injects the Sentry JS loader script inside the `<head>
 
 Database tracing measures the execution time of database operations.
 
+### Tracing CLI scripts
 
+Some hooks are not used when calling CLI scripts, such as upgrade.php or cron.php. Therefore, the code must be added manually to the beginning and the end of the script (after including config.php and libraries).
+
+```php
+require_once(__DIR__ . '/../../local/sentry/lib.php');
+local_sentry_before_session_start();
+...
+local_sentry_before_footer();
+?>
+```
+
+Note the payload size limitations for Sentry, aswell as the maximum number of spans, as those limits may quickly be reached when tracing cron.php of upgrade.php scripts.
 

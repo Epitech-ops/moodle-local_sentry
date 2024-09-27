@@ -126,7 +126,7 @@ class sentry_moodle_database extends \moodle_database {
      * @var moodle_database
      */
 	protected $db;
-        private static $_db;
+    private static $_db;
 
     /**
      * Constructor - Instantiates the database, specifying if it's external (connect to other systems) or not (Moodle DB).
@@ -202,7 +202,7 @@ class sentry_moodle_database extends \moodle_database {
         if(!empty(self::$_db)) {
             return self::$_db->get_driver_instance($type, $library, $external = false);
         }
-        return null;
+        return parent::get_driver_instance($type, $library, $external);
     }
 
     /**
@@ -407,7 +407,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return void
      */
 	protected function store_settings($dbhost, $dbuser, $dbpass, $dbname, $prefix, array $dboptions=null) {
-        return $this->db->store_settings($dbhost, $dbuser, $dbpass, $dbname, $prefix, $dboptions);
+        $this->db->store_settings($dbhost, $dbuser, $dbpass, $dbname, $prefix, $dboptions);
     }
 
     /**
@@ -430,11 +430,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return cache_application The databasemeta cachestore to complete operations on.
      */
     protected function get_metacache() {
-        if (!isset($this->metacache)) {
-            $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
-            $this->metacache = cache::make('core', 'databasemeta', $properties);
-        }
-        return $this->metacache;
+        return $this->db->get_metacache();
     }
 
     /**
@@ -443,12 +439,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return cache_application The temp_tables cachestore to complete operations on.
      */
     protected function get_temp_tables_cache() {
-        if (!isset($this->metacachetemp)) {
-            // Using connection data to prevent collisions when using the same temp table name with different db connections.
-            $properties = array('dbfamily' => $this->get_dbfamily(), 'settings' => $this->get_settings_hash());
-            $this->metacachetemp = cache::make('core', 'temp_tables', $properties);
-        }
-        return $this->metacachetemp;
+        return $this->db->get_temp_tables_cache();
     }
 
     /**
@@ -495,7 +486,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return void
      */
 	protected function query_start($sql, ?array $params, $type, $extrainfo=null) {
-        return $this->db->query_start($sql, $params, $type, $extrainfo);
+        $this->db->query_start($sql, $params, $type, $extrainfo);
     }
 
     /**
@@ -506,7 +497,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return void
      */
 	protected function query_end($result) {
-        return $this->db->query_end($result);
+        $this->db->query_end($result);
     }
 
     /**
@@ -522,14 +513,14 @@ class sentry_moodle_database extends \moodle_database {
      * Disable logging temporarily.
      */
     protected function query_log_prevent() {
-        $this->skiplogging = true;
+        $this->db->query_log_prevent();
     }
 
     /**
      * Restore old logging behavior.
      */
     protected function query_log_allow() {
-        $this->skiplogging = false;
+        $this->db->query_log_allow();
     }
 
     /**
@@ -537,7 +528,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return float Seconds with microseconds
      */
     protected function query_time() {
-        return microtime(true) - $this->last_time;
+        return $this->db->query_time();
     }
 
     /**
@@ -572,34 +563,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return void
      */
 	protected function print_debug($sql, array $params=null, $obj=null) {
-        if (!$this->get_debug()) {
-            return;
-        }
-        if (CLI_SCRIPT) {
-            $separator = "--------------------------------\n";
-            echo $separator;
-            echo "{$sql}\n";
-            if (!is_null($params)) {
-                echo "[" . var_export($params, true) . "]\n";
-            }
-            echo $separator;
-        } else if (AJAX_SCRIPT) {
-            $separator = "--------------------------------";
-            error_log($separator);
-            error_log($sql);
-            if (!is_null($params)) {
-                error_log("[" . var_export($params, true) . "]");
-            }
-            error_log($separator);
-        } else {
-            $separator = "<hr />\n";
-            echo $separator;
-            echo s($sql) . "\n";
-            if (!is_null($params)) {
-                echo "[" . s(var_export($params, true)) . "]\n";
-            }
-            echo $separator;
-        }
+        $this->db->print_debug($sql, $params, $obj);
     }
 
     /**
@@ -607,21 +571,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return void
      */
     protected function print_debug_time() {
-        if (!$this->get_debug()) {
-            return;
-        }
-        $time = $this->query_time();
-        $message = "Query took: {$time} seconds.\n";
-        if (CLI_SCRIPT) {
-            echo $message;
-            echo "--------------------------------\n";
-        } else if (AJAX_SCRIPT) {
-            error_log($message);
-            error_log("--------------------------------");
-        } else {
-            echo s($message);
-            echo "<hr />\n";
-        }
+        $this->db->print_debug_time();
     }
 
     /**
@@ -632,63 +582,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return array An array list containing sql 'where' part and 'params'.
      */
     protected function where_clause($table, array $conditions=null) {
-        // We accept nulls in conditions
-        $conditions = is_null($conditions) ? array() : $conditions;
-
-        if (empty($conditions)) {
-            return array('', array());
-        }
-
-        // Some checks performed under debugging only
-        if (debugging()) {
-            $columns = $this->get_columns($table);
-            if (empty($columns)) {
-                // no supported columns means most probably table does not exist
-                throw new dml_exception('ddltablenotexist', $table);
-            }
-            foreach ($conditions as $key=>$value) {
-                if (!isset($columns[$key])) {
-                    $a = new stdClass();
-                    $a->fieldname = $key;
-                    $a->tablename = $table;
-                    throw new dml_exception('ddlfieldnotexist', $a);
-                }
-                $column = $columns[$key];
-                if ($column->meta_type == 'X') {
-                    //ok so the column is a text column. sorry no text columns in the where clause conditions
-                    throw new dml_exception('textconditionsnotallowed', $conditions);
-                }
-            }
-        }
-
-        $allowed_types = $this->allowed_param_types();
-        $where = array();
-        $params = array();
-
-        foreach ($conditions as $key=>$value) {
-            if (is_int($key)) {
-                throw new dml_exception('invalidnumkey');
-            }
-            if (is_null($value)) {
-                $where[] = "$key IS NULL";
-            } else {
-                if ($allowed_types & SQL_PARAMS_NAMED) {
-                    // Need to verify key names because they can contain, originally,
-                    // spaces and other forbidden chars when using sql_xxx() functions and friends.
-                    $normkey = trim(preg_replace('/[^a-zA-Z0-9_-]/', '_', $key), '-_');
-                    if ($normkey !== $key) {
-                        debugging('Invalid key found in the conditions array.');
-                    }
-                    $where[] = "$key = :$normkey";
-                    $params[$normkey] = $value;
-                } else {
-                    $where[] = "$key = ?";
-                    $params[] = $value;
-                }
-            }
-        }
-        $where = implode(" AND ", $where);
-        return array($where, $params);
+        return $this->db->where_clause($table, $conditions);
     }
 
     /**
@@ -699,39 +593,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return array An array containing sql 'where' part and 'params'
      */
     protected function where_clause_list($field, array $values) {
-        if (empty($values)) {
-            return array("1 = 2", array()); // Fake condition, won't return rows ever. MDL-17645
-        }
-
-        // Note: Do not use get_in_or_equal() because it can not deal with bools and nulls.
-
-        $params = array();
-        $select = "";
-        $values = (array)$values;
-        foreach ($values as $value) {
-            if (is_bool($value)) {
-                $value = (int)$value;
-            }
-            if (is_null($value)) {
-                $select = "$field IS NULL";
-            } else {
-                $params[] = $value;
-            }
-        }
-        if ($params) {
-            if ($select !== "") {
-                $select = "$select OR ";
-            }
-            $count = count($params);
-            if ($count == 1) {
-                $select = $select."$field = ?";
-            } else {
-                $qs = str_repeat(',?', $count);
-                $qs = ltrim($qs, ',');
-                $select = $select."$field IN ($qs)";
-            }
-        }
-        return array($select, $params);
+        return $this->db->where_clause_list($field, $values);
     }
 
     /**
@@ -755,13 +617,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return string The sql with tablenames being prefixed with $CFG->prefix
      */
     protected function fix_table_names($sql) {
-        return preg_replace_callback(
-            '/\{([a-z][a-z0-9_]*)\}/',
-            function($matches) {
-                return $this->fix_table_name($matches[1]);
-            },
-            $sql
-        );
+        return $this->db->fix_table_names($sql);
     }
 
     /**
@@ -771,7 +627,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return string The prefixed table name
      */
     protected function fix_table_name($tablename) {
-        return $this->prefix . $tablename;
+        return $this->db->fix_table_name($tablename);
     }
 
     /**
@@ -792,9 +648,7 @@ class sentry_moodle_database extends \moodle_database {
      * @throws coding_exception if object detected
      */
     protected function detect_objects($value) {
-        if (is_object($value)) {
-            throw new coding_exception('Invalid database query parameter value', 'Objects are are not allowed: '.get_class($value));
-        }
+        $this->db->detect_objects($value);
     }
 
     /**
@@ -827,42 +681,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return array Normalised limit params in array($limitfrom, $limitnum)
      */
     protected function normalise_limit_from_num($limitfrom, $limitnum) {
-        global $CFG;
-
-        // We explicilty treat these cases as 0.
-        if ($limitfrom === null || $limitfrom === '' || $limitfrom === -1) {
-            $limitfrom = 0;
-        }
-        if ($limitnum === null || $limitnum === '' || $limitnum === -1) {
-            $limitnum = 0;
-        }
-
-        if ($CFG->debugdeveloper) {
-            if (!is_numeric($limitfrom)) {
-                $strvalue = var_export($limitfrom, true);
-                debugging("Non-numeric limitfrom parameter detected: $strvalue, did you pass the correct arguments?",
-                    DEBUG_DEVELOPER);
-            } else if ($limitfrom < 0) {
-                debugging("Negative limitfrom parameter detected: $limitfrom, did you pass the correct arguments?",
-                    DEBUG_DEVELOPER);
-            }
-
-            if (!is_numeric($limitnum)) {
-                $strvalue = var_export($limitnum, true);
-                debugging("Non-numeric limitnum parameter detected: $strvalue, did you pass the correct arguments?",
-                    DEBUG_DEVELOPER);
-            } else if ($limitnum < 0) {
-                debugging("Negative limitnum parameter detected: $limitnum, did you pass the correct arguments?",
-                    DEBUG_DEVELOPER);
-            }
-        }
-
-        $limitfrom = (int)$limitfrom;
-        $limitnum  = (int)$limitnum;
-        $limitfrom = max(0, $limitfrom);
-        $limitnum  = max(0, $limitnum);
-
-        return array($limitfrom, $limitnum);
+        return $this->db->normalise_limit_from_num($limitfrom, $limitnum);
     }
 
     /**
