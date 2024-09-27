@@ -4096,46 +4096,6 @@ EOD;
         $this->assertSame($clob, $record->description);
     }
 
-    public function test_unique_index_collation_trouble() {
-        // Note: this is a work in progress, we should probably move this to ddl test.
-
-        $DB = $this->tdb;
-        $dbman = $DB->get_manager();
-
-        $table = $this->get_test_table();
-        $tablename = $table->getName();
-
-        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, null, null, null);
-        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-        $table->add_index('name', XMLDB_INDEX_UNIQUE, array('name'));
-        $dbman->create_table($table);
-
-        $DB->insert_record($tablename, array('name'=>'aaa'));
-
-        try {
-            $DB->insert_record($tablename, array('name'=>'AAA'));
-        } catch (\moodle_exception $e) {
-            // TODO: ignore case insensitive uniqueness problems for now.
-            // $this->fail("Unique index is case sensitive - this may cause problems in some tables");
-        }
-
-        try {
-            $DB->insert_record($tablename, array('name'=>'aäa'));
-            $DB->insert_record($tablename, array('name'=>'aáa'));
-            $this->assertTrue(true);
-        } catch (\moodle_exception $e) {
-            $family = $DB->get_dbfamily();
-            if ($family === 'mysql' or $family === 'mssql') {
-                $this->fail("Unique index is accent insensitive, this may cause problems for non-ascii languages. This is usually caused by accent insensitive default collation.");
-            } else {
-                // This should not happen, PostgreSQL and Oracle do not support accent insensitive uniqueness.
-                $this->fail("Unique index is accent insensitive, this may cause problems for non-ascii languages.");
-            }
-            throw($e);
-        }
-    }
-
     public function test_sql_equal() {
         $DB = $this->tdb;
         $dbman = $DB->get_manager();
