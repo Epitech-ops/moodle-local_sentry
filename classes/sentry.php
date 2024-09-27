@@ -168,6 +168,7 @@ class sentry {
      * Starts the main transaction
      */
     public static function start_main_transaction() {
+        global $CFG;
         if(!function_exists('\Sentry\startTransaction') ||
             !self::tracing_enabled() ||
             !self::dsn_is_set() ||
@@ -178,6 +179,16 @@ class sentry {
         }
     
         $uri = empty($_SERVER['REQUEST_URI']) ? 'UNKNOWN' : $_SERVER['REQUEST_URI'];
+        if(defined('CLI_SCRIPT') && CLI_SCRIPT) {
+            $uri = 'CLI_SCRIPT';
+            if(!empty($_SERVER['PHP_SELF'])) {
+                $rootlen = strlen($CFG->dirroot);
+                $uri = $_SERVER['PHP_SELF'];
+                if($CFG->dirroot === substr($uri, 0, $rootlen)) {
+                    $uri = trim(substr($uri, $rootlen), '/');
+                }
+            }
+        }
         $transactionContext = new \Sentry\Tracing\TransactionContext(
             $name = $uri,
             $parentSampled = false
@@ -306,6 +317,7 @@ class sentry {
             return $return;
         }
         \Sentry\SentrySdk::getCurrentHub()->setSpan(self::$_transaction);
+        return $return;
     }
 
     /**
@@ -368,8 +380,9 @@ class sentry {
         if(empty(self::get_config('tracing_db'))) {
             return false;
         }
-	    return !empty(self::get_config('tracing_hosts')) && (in_array($hostname, self::get_config('tracing_hosts')) ||
-        in_array('*', self::get_config('tracing_hosts')));
+	    return !empty(self::get_config('tracing_hosts')) &&
+            (in_array($hostname, self::get_config('tracing_hosts')) ||
+            in_array('*', self::get_config('tracing_hosts')));
     }
 
     /**
