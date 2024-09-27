@@ -29,6 +29,8 @@ defined('MOODLE_INTERNAL') || die();
  * Main Sentry management class
  */
 class sentry {
+    const HTTP_X_UNIQUE_ID = "HTTP_X_UNIQUE_ID";
+
     private static $_initialized = false;
     private static $_transaction_started = false;
     private static $_transaction_finished = false;
@@ -47,7 +49,8 @@ class sentry {
         'tracking_javascript' => false,
         'tracking_php' => false,
         'tracing_db' => false,
-        'tracing_hosts' => false
+        'tracing_hosts' => false,
+        'include_user_data' => false
     ];
 
     /**
@@ -115,7 +118,7 @@ class sentry {
                 }
             }
         } else {
-            foreach(self::$_settings_names as $name => $isset) {
+            foreach(self::$_settings_status as $name => $isset) {
                 if(!$isset) {
                     self::$_config[$name] = get_config('local_sentry', $name);
                     self::$_settings_status[$name] = true;
@@ -235,7 +238,13 @@ class sentry {
             return;
         }
         if(!empty(self::$_spans)) {
-            $parent = self::$_spans[count(self::$_spans)-1];
+            for($i=count(self::$_spans)-1; $i>=0; $i--) {
+                $parent = array_pop(self::$_spans);
+                self::$_spans = array_values(self::$_spans);
+                if(is_object($parent)) {
+                    break;
+                }
+            }
         } else {
             $parent = self::get_transaction();
         }
@@ -276,12 +285,18 @@ class sentry {
     public static function finish_span($return = null) {
         if(!self::initialized() ||
             !self::tracing_enabled()) {
-            return;
+            return $return;
         }
         if(count(self::$_spans) > 0) {
             // $span->finish();
-            $span = array_pop(self::$_spans);
-            self::$_spans = array_keys(self::$_spans);
+            for($i=count(self::$_spans)-1; $i>=0; $i--) {
+                $span = array_pop(self::$_spans);
+                self::$_spans = array_values(self::$_spans);
+                if(is_object($span)) {
+                    break;
+                }
+            }
+            
             $span->finish();
             if(count(self::$_spans) > 0 && !empty(end(self::$_spans))) {
                 \Sentry\SentrySdk::getCurrentHub()->setSpan(end(self::$_spans));
@@ -315,10 +330,32 @@ class sentry {
                 // Finish the main transaction.
                 self::$_transaction->finish();
             }
+            self::set_scope();
             \Sentry\captureException($ex);
         }
         // Use the default exception handler afterwards
         default_exception_handler($ex);
+    }
+
+    /**
+     * Set user and tag data
+     */
+    private static function set_scope() {
+        \Sentry\configureScope(function (\Sentry\State\Scope $scope): void {
+            global $USER;
+            if(!empty($USER) &&
+                    !empty($USER->id) &&
+                    !empty(self::get_config('include_user_data'))) {
+                $scope->setUser([
+                    'email' => $USER->email,
+                    'username' => $USER->username,
+                    'id' => $USER->id,
+                ]);
+            }
+            if(!empty($_SERVER[self::HTTP_X_UNIQUE_ID])) {
+                $scope->setTag('traceid_header_name', $_SERVER[self::HTTP_X_UNIQUE_ID]);
+            }
+        });
     }
 
     /**
@@ -328,6 +365,9 @@ class sentry {
      */
     public static function tracing_enabled() {
         $hostname = php_uname('n');
+        if(empty(self::get_config('tracing_db'))) {
+            return false;
+        }
 	    return !empty(self::get_config('tracing_hosts')) && (in_array($hostname, self::get_config('tracing_hosts')) ||
         in_array('*', self::get_config('tracing_hosts')));
     }
@@ -497,7 +537,7 @@ class sentry {
         }
         return '<script src="' .
             $url .
-            '"></script>';
+            '"></script>' . PHP_EOL;
     }
 
     /**
@@ -507,5 +547,16 @@ class sentry {
      */
     public static function get_js_bundle_url() {
         return new \moodle_url('/local/sentry/assets/js/sentry.bundle.min.js');
+    }
+
+    /**
+     * Resets stored config values to re-read them.
+     * Used in testing.
+     */
+    public static function reset_config() {
+        foreach(self::$_settings_status as $name => $status) {
+            self::$_settings_status[$name] = false;
+        }
+        self::$_config = [];
     }
 }

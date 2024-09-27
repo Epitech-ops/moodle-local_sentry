@@ -120,12 +120,12 @@ class sentry_moodle_database extends \moodle_database {
     /**
      * @var boolean variable use to temporarily disable logging.
      */
-		protected $skiplogging = false;
+	protected $skiplogging = false;
 
-		/**
-		 * @var moodle_database
-		 */
-		protected $db;
+    /**
+     * @var moodle_database
+     */
+	protected $db;
         private static $_db;
 
     /**
@@ -135,11 +135,11 @@ class sentry_moodle_database extends \moodle_database {
      * @param moodle_database $db
      */
     public function __construct($external=false, $db = null) {
-			$this->external  = $external;
-            if($db) {
-                self::$_db = $db;
-                $this->db = self::$_db;
-            }
+        $this->external  = $external;
+        if($db) {
+            self::$_db = $db;
+            $this->db = self::$_db;
+        }
     }
 
     /**
@@ -149,21 +149,35 @@ class sentry_moodle_database extends \moodle_database {
         $this->db->dispose();
     }
 
-		public function new_span($op, $description = "", $data = []) {
-            \local_sentry\sentry::start_span($op, $description, $data, 2);
-		}
+    /**
+     * Start a new Sentry span.
+     *
+     * @param string $op - operation name
+     * @param string $description - operation description or raw sql
+     * @param array $data - associative array of data
+     */
+    public function new_span($op, $description = "", $data = []) {
+        \local_sentry\sentry::start_span($op, $description, $data, 2);
+    }
 
-		public function finish_span($return = null) {
-                return \local_sentry\sentry::finish_span($return);
-		}
+    /**
+     * Finish a Sentry span.
+     *
+     * @param $return Value to be returned after finishing the span.
+     * @return $return
+     */
+    public function finish_span($return = null) {
+        return \local_sentry\sentry::finish_span($return);
+    }
+
     /**
      * Detects if all needed PHP stuff are installed for DB connectivity.
      * Note: can be used before connect()
      * @return mixed True if requirements are met, otherwise a string if something isn't installed.
      */
-		public function driver_installed() {
-			return $this->db->driver_installed();
-		}
+    public function driver_installed() {
+        return $this->db->driver_installed();
+    }
 
     /**
      * Returns database table prefix
@@ -171,7 +185,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return string The prefix used in the database.
      */
     public function get_prefix() {
-        return $this->db->prefix;
+        return $this->db->get_prefix();
     }
 
     /**
@@ -184,19 +198,19 @@ class sentry_moodle_database extends \moodle_database {
      * @param bool $external True if this is an external database.
      * @return moodle_database driver object or null if error, for example of driver object see {@link mysqli_native_moodle_database}
      */
-		public static function get_driver_instance($type, $library, $external = false) {
-            if(!empty(self::$_db)) {
-				return self::$_db->get_driver_instance($type, $library, $external = false);
-            }
-            return null;
+	public static function get_driver_instance($type, $library, $external = false) {
+        if(!empty(self::$_db)) {
+            return self::$_db->get_driver_instance($type, $library, $external = false);
         }
+        return null;
+    }
 
     /**
      * Returns the database vendor.
      * Note: can be used before connect()
      * @return string The db vendor name, usually the same as db family name.
      */
-		public function get_dbvendor() {
+	public function get_dbvendor() {
         return $this->db->get_dbvendor();
     }
 
@@ -205,134 +219,134 @@ class sentry_moodle_database extends \moodle_database {
      * Note: can be used before connect()
      * @return string The db family name (mysql, postgres, mssql, oracle, etc.)
      */
-		public function get_dbfamily() {
-				return $this->db->get_dbfamily();
-		}
+	public function get_dbfamily() {
+        return $this->db->get_dbfamily();
+    }
 
     /**
      * Returns a more specific database driver type
      * Note: can be used before connect()
      * @return string The db type mysqli, pgsql, oci, mssql, sqlsrv
      */
-		protected function get_dbtype() {
-				return $this->db->get_dbtype();
-		}
+	protected function get_dbtype() {
+        return $this->db->get_dbtype();
+    }
 
-        /**
-         * Returns the general database library name
-         * Note: can be used before connect()
-         * @return string The db library type -  pdo, native etc.
-         */
-        protected function get_dblibrary() {
-                return $this->db->get_dblibrary();
-        }
+    /**
+     * Returns the general database library name
+     * Note: can be used before connect()
+     * @return string The db library type -  pdo, native etc.
+     */
+    protected function get_dblibrary() {
+        return $this->db->get_dblibrary();
+    }
 
-        /**
-         * Returns the current MySQL db engine.
-         *
-         * This is an ugly workaround for MySQL default engine problems,
-         * Moodle is designed to work best on ACID compliant databases
-         * with full transaction support. Do not use MyISAM.
-         *
-         * @return string or null MySQL engine name
-         */
-        public function get_dbengine() {
-            return $this->db->get_dbengine();
-        }
+    /**
+     * Returns the current MySQL db engine.
+     *
+     * This is an ugly workaround for MySQL default engine problems,
+     * Moodle is designed to work best on ACID compliant databases
+     * with full transaction support. Do not use MyISAM.
+     *
+     * @return string or null MySQL engine name
+     */
+    public function get_dbengine() {
+        return $this->db->get_dbengine();
+    }
 
-        /**
-         * Returns the current MySQL db collation.
-         *
-         * This is an ugly workaround for MySQL default collation problems.
-         *
-         * @return string or null MySQL collation name
-         */
-        public function get_dbcollation() {
-            return $this->db->get_dbcollation();
-        }
+    /**
+     * Returns the current MySQL db collation.
+     *
+     * This is an ugly workaround for MySQL default collation problems.
+     *
+     * @return string or null MySQL collation name
+     */
+    public function get_dbcollation() {
+        return $this->db->get_dbcollation();
+    }
 
-        /**
-         * Tests if the Antelope file format is still supported or it has been removed.
-         * When removed, only Barracuda file format is supported, given the XtraDB/InnoDB engine.
-         *
-         * @return bool True if the Antelope file format has been removed; otherwise, false.
-         */
-        protected function is_antelope_file_format_no_more_supported() {
-            return $this->db->is_antelope_file_format_no_more_supported();
-        }
+    /**
+     * Tests if the Antelope file format is still supported or it has been removed.
+     * When removed, only Barracuda file format is supported, given the XtraDB/InnoDB engine.
+     *
+     * @return bool True if the Antelope file format has been removed; otherwise, false.
+     */
+    protected function is_antelope_file_format_no_more_supported() {
+        return $this->db->is_antelope_file_format_no_more_supported();
+    }
 
-        /**
-         * Get the row format from the database schema.
-         *
-         * @param string $table
-         * @return string row_format name or null if not known or table does not exist.
-         */
-        public function get_row_format($table = null) {
-            return $this->db->get_row_format($table);
-        }
+    /**
+     * Get the row format from the database schema.
+     *
+     * @param string $table
+     * @return string row_format name or null if not known or table does not exist.
+     */
+    public function get_row_format($table = null) {
+        return $this->db->get_row_format($table);
+    }
 
-        /**
-         * Is this database compatible with compressed row format?
-         * This feature is necessary for support of large number of text
-         * columns in InnoDB/XtraDB database.
-         *
-         * @param bool $cached use cached result
-         * @return bool true if table can be created or changed to compressed row format.
-         */
-        public function is_compressed_row_format_supported($cached = true) {
-            return $this->db->is_compressed_row_format_supported($cached);
-        }
+    /**
+     * Is this database compatible with compressed row format?
+     * This feature is necessary for support of large number of text
+     * columns in InnoDB/XtraDB database.
+     *
+     * @param bool $cached use cached result
+     * @return bool true if table can be created or changed to compressed row format.
+     */
+    public function is_compressed_row_format_supported($cached = true) {
+        return $this->db->is_compressed_row_format_supported($cached);
+    }
 
-        /**
-         * Check the database to see if innodb_file_per_table is on.
-         *
-         * @return bool True if on otherwise false.
-         */
-        public function is_file_per_table_enabled() {
-            return $this->db->is_file_per_table_enabled();
-        }
+    /**
+     * Check the database to see if innodb_file_per_table is on.
+     *
+     * @return bool True if on otherwise false.
+     */
+    public function is_file_per_table_enabled() {
+        return $this->db->is_file_per_table_enabled();
+    }
 
-        /**
-         * Check the database to see if innodb_large_prefix is on.
-         *
-         * @return bool True if on otherwise false.
-         */
-        public function is_large_prefix_enabled() {
-            return $this->db->is_large_prefix_enabled();
-        }
+    /**
+     * Check the database to see if innodb_large_prefix is on.
+     *
+     * @return bool True if on otherwise false.
+     */
+    public function is_large_prefix_enabled() {
+        return $this->db->is_large_prefix_enabled();
+    }
 
-        /**
-         * Determine if the row format should be set to compressed, dynamic, or default.
-         *
-         * Terrible kludge. If we're using utf8mb4 AND we're using InnoDB, we need to specify row format to
-         * be either dynamic or compressed (default is compact) in order to allow for bigger indexes (MySQL
-         * errors #1709 and #1071).
-         *
-         * @param  string $engine The database engine being used. Will be looked up if not supplied.
-         * @param  string $collation The database collation to use. Will look up the current collation if not supplied.
-         * @return string An sql fragment to add to sql statements.
-         */
-        public function get_row_format_sql($engine = null, $collation = null) {
-            return $this->db->get_row_format_sql($engine, $collation);
-        }
+    /**
+     * Determine if the row format should be set to compressed, dynamic, or default.
+     *
+     * Terrible kludge. If we're using utf8mb4 AND we're using InnoDB, we need to specify row format to
+     * be either dynamic or compressed (default is compact) in order to allow for bigger indexes (MySQL
+     * errors #1709 and #1071).
+     *
+     * @param  string $engine The database engine being used. Will be looked up if not supplied.
+     * @param  string $collation The database collation to use. Will look up the current collation if not supplied.
+     * @return string An sql fragment to add to sql statements.
+     */
+    public function get_row_format_sql($engine = null, $collation = null) {
+        return $this->db->get_row_format_sql($engine, $collation);
+    }
 
-        /**
-         * Returns the localised database type name
-         * Note: can be used before connect()
-         * @return string
-         */
-		public function get_name() {
-				return $this->db->get_name();
-		}
+    /**
+     * Returns the localised database type name
+     * Note: can be used before connect()
+     * @return string
+     */
+	public function get_name() {
+        return $this->db->get_name();
+    }
 
     /**
      * Returns the localised database configuration help.
      * Note: can be used before connect()
      * @return string
      */
-		public function get_configuration_help() {
-				return $this->db->get_configuration_help();
-		}
+	public function get_configuration_help() {
+        return $this->db->get_configuration_help();
+    }
 
     /**
      * Returns the localised database description
@@ -340,8 +354,7 @@ class sentry_moodle_database extends \moodle_database {
      * @deprecated since 2.6
      * @return string
      */
-		public function get_configuration_hints() {
-				
+	public function get_configuration_hints() {	
         debugging('$DB->get_configuration_hints() method is deprecated, use $DB->get_configuration_help() instead');
 				return $this->db->get_configuration_help();
     }
@@ -350,8 +363,8 @@ class sentry_moodle_database extends \moodle_database {
      * Returns the db related part of config.php
      * @return stdClass
      */
-		public function export_dbconfig() {
-				return $this->db->export_dbconfig();
+	public function export_dbconfig() {
+        return $this->db->export_dbconfig();
     }
 
     /**
@@ -376,12 +389,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true
      * @throws dml_connection_exception if error
      */
-		public function connect($dbhost, $dbuser, $dbpass, $dbname, $prefix, array $dboptions=null){
-				$span = $this->new_span('connect', $dbhost, ['db.connect' => $dbhost]);
-				return $this->finish_span(
-                    $this->db->connect($dbhost, $dbuser, $dbpass, $dbname, $prefix, $dboptions)
-                );
-		}
+	public function connect($dbhost, $dbuser, $dbpass, $dbname, $prefix, array $dboptions=null){
+        $span = $this->new_span('connect', $dbhost, ['db.connect' => $dbhost]);
+        return $this->finish_span(
+            $this->db->connect($dbhost, $dbuser, $dbpass, $dbname, $prefix, $dboptions)
+        );
+    }
 
     /**
      * Store various database settings
@@ -393,8 +406,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param array $dboptions driver specific options
      * @return void
      */
-		protected function store_settings($dbhost, $dbuser, $dbpass, $dbname, $prefix, array $dboptions=null) {
-				return $this->db->store_settings($dbhost, $dbuser, $dbpass, $dbname, $prefix, $dboptions);
+	protected function store_settings($dbhost, $dbuser, $dbpass, $dbname, $prefix, array $dboptions=null) {
+        return $this->db->store_settings($dbhost, $dbuser, $dbpass, $dbname, $prefix, $dboptions);
     }
 
     /**
@@ -457,8 +470,8 @@ class sentry_moodle_database extends \moodle_database {
      * @private to be used by core only
      * @return array or null if not in transaction.
      */
-		public function get_transaction_start_backtrace() {
-				return $this->db->get_transaction_start_backtrace();
+	public function get_transaction_start_backtrace() {
+        return $this->db->get_transaction_start_backtrace();
     }
 
     /**
@@ -467,8 +480,8 @@ class sentry_moodle_database extends \moodle_database {
      * Do NOT use connect() again, create a new instance if needed.
      * @return void
      */
-		public function dispose() {
-				return $this->db->dispose();
+	public function dispose() {
+        return $this->db->dispose();
     }
 
     /**
@@ -481,8 +494,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param mixed $extrainfo This is here for any driver specific extra information.
      * @return void
      */
-		protected function query_start($sql, ?array $params, $type, $extrainfo=null) {
-				return $this->db->query_start($sql, $params, $type, $extrainfo);
+	protected function query_start($sql, ?array $params, $type, $extrainfo=null) {
+        return $this->db->query_start($sql, $params, $type, $extrainfo);
     }
 
     /**
@@ -492,8 +505,8 @@ class sentry_moodle_database extends \moodle_database {
      * @throws dml_read_exception | dml_write_exception | ddl_change_structure_exception
      * @return void
      */
-		protected function query_end($result) {
-				return $this->db->query_end($result);
+	protected function query_end($result) {
+        return $this->db->query_end($result);
     }
 
     /**
@@ -501,8 +514,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param string|bool $error or false if not error
      * @return void
      */
-		public function query_log($error=false) {
-				return $this->db->query_log($error);
+	public function query_log($error=false) {
+        return $this->db->query_log($error);
     }
 
     /**
@@ -531,25 +544,25 @@ class sentry_moodle_database extends \moodle_database {
      * Returns database server info array
      * @return array Array containing 'description' and 'version' at least.
      */
-		public function get_server_info() {
-				return $this->db->get_server_info();
-		}
+	public function get_server_info() {
+        return $this->db->get_server_info();
+    }
 
     /**
      * Returns supported query parameter types
      * @return int bitmask of accepted SQL_PARAMS_*
      */
-		protected function allowed_param_types() {
-				return $this->db->allowed_param_types();
-		}
+	protected function allowed_param_types() {
+        return $this->db->allowed_param_types();
+    }
 
     /**
      * Returns the last error reported by the database engine.
      * @return string The error message.
      */
-		public function get_last_error() {
-				return $this->db->get_last_error();
-		}
+	public function get_last_error() {
+        return $this->db->get_last_error();
+    }
 
     /**
      * Prints sql debug info
@@ -558,7 +571,7 @@ class sentry_moodle_database extends \moodle_database {
      * @param mixed $obj The library specific object. (optional)
      * @return void
      */
-		protected function print_debug($sql, array $params=null, $obj=null) {
+	protected function print_debug($sql, array $params=null, $obj=null) {
         if (!$this->get_debug()) {
             return;
         }
@@ -732,8 +745,8 @@ class sentry_moodle_database extends \moodle_database {
      * @throws coding_exception | dml_exception
      * @return array A list containing the constructed sql fragment and an array of parameters.
      */
-		public function get_in_or_equal($items, $type=SQL_PARAMS_QM, $prefix='param', $equal=true, $onemptyitems=false) {
-            return $this->db->get_in_or_equal($items, $type, $prefix, $equal, $onemptyitems);
+	public function get_in_or_equal($items, $type=SQL_PARAMS_QM, $prefix='param', $equal=true, $onemptyitems=false) {
+        return $this->db->get_in_or_equal($items, $type, $prefix, $equal, $onemptyitems);
     }
 
     /**
@@ -790,8 +803,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param array $params The query parameters.
      * @return array (sql, params, type of params)
      */
-		public function fix_sql_params($sql, array $params=null) {
-				return $this->db->fix_sql_params($sql, $params);
+	public function fix_sql_params($sql, array $params=null) {
+        return $this->db->fix_sql_params($sql, $params);
     }
 
     /**
@@ -800,41 +813,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return string Instrumented sql
      */
     protected function add_sql_debugging(string $sql): string {
-        global $CFG;
-
-        if (!property_exists($CFG, 'debugsqltrace')) {
-            return $sql;
-        }
-
-        $level = $CFG->debugsqltrace;
-
-        if (empty($level)) {
-            return $sql;
-        }
-
-        $callers = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-
-        // Ignore sentry_moodle_database internals.
-        $callers = array_filter($callers, function($caller) {
-            return empty($caller['class']) || ($caller['class'] != 'moodle_database' && $caller['class'] != 'sentry_moodle_database');
-        });
-
-        $callers = array_slice($callers, 0, $level);
-
-        $text = trim(format_backtrace($callers, true));
-
-        // Convert all linebreaks to SQL comments, optionally
-        // also eating any * formatting.
-        $text = preg_replace("/(^|\n)\*?\s*/", "\n-- ", $text);
-
-        // Convert all ? to 'unknown' in the sql coment so these don't get
-        // caught by fix_sql_params().
-        $text = str_replace('?', 'unknown', $text);
-
-        // Convert tokens like :test to ::test for the same reason.
-        $text = preg_replace('/(?<!:):[a-z][a-z0-9_]*/', ':\0', $text);
-
-        return $sql . $text;
+        return $this->db->add_sql_debugging();
     }
 
 
@@ -891,18 +870,18 @@ class sentry_moodle_database extends \moodle_database {
      * @param bool $usecache if true, returns list of cached tables.
      * @return array of table names in lowercase and without prefix
      */
-		public function get_tables($usecache=true) {
-				return $this->db->get_tables($usecache);
-		}
+	public function get_tables($usecache=true) {
+        return $this->db->get_tables($usecache);
+    }
 
     /**
      * Return table indexes - everything lowercased.
      * @param string $table The table we want to get indexes from.
      * @return array An associative array of indexes containing 'unique' flag and 'columns' being indexed
      */
-		public function get_indexes($table) {
-				return $this->db->get_indexes($table);
-		}
+	public function get_indexes($table) {
+        return $this->db->get_indexes($table);
+    }
 
     /**
      * Returns detailed information about columns in table. This information is cached internally.
@@ -911,11 +890,11 @@ class sentry_moodle_database extends \moodle_database {
      * @param bool $usecache Flag to use internal cacheing. The default is true.
      * @return \database_column_info[] of database_column_info objects indexed with column names
      */
-		public function get_columns($table, $usecache = true): array {
-				$span = $this->new_span('get_columns', $table, ['db.table' => $table]);
-				return $this->finish_span(
-                    $this->db->get_columns($table, $usecache)
-                );
+	public function get_columns($table, $usecache = true): array {
+        $span = $this->new_span('get_columns', $table, ['db.table' => $table]);
+        return $this->finish_span(
+            $this->db->get_columns($table, $usecache)
+        );
     }
 
     /**
@@ -924,12 +903,12 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $table The table's name.
      * @return \database_column_info[] of database_column_info objects indexed with column names
      */
-		protected function fetch_columns(string $table): array {
-				$span = $this->new_span('fetch_columns', $table, ['db.table' => $table]);
-				return $this->finish_span(
-                    $this->db->fetch_columns($table)
-                );
-		}
+	protected function fetch_columns(string $table): array {
+        $span = $this->new_span('fetch_columns', $table, ['db.table' => $table]);
+        return $this->finish_span(
+            $this->db->fetch_columns($table)
+        );
+    }
 
     /**
      * Normalise values based on varying RDBMS's dependencies (booleans, LOBs...)
@@ -938,9 +917,9 @@ class sentry_moodle_database extends \moodle_database {
      * @param mixed $value value we are going to normalise
      * @return mixed the normalised value
      */
-		protected function normalise_value($column, $value) {
-				return $this->db->normalise_value($column, $value);
-		}
+	protected function normalise_value($column, $value) {
+        return $this->db->normalise_value($column, $value);
+    }
 
     /**
      * Resets the internal column details cache
@@ -948,8 +927,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param array|null $tablenames an array of xmldb table names affected by this request.
      * @return void
      */
-		public function reset_caches($tablenames = null) {
-				return $this->db->reset_caches($tablenames);
+	public function reset_caches($tablenames = null) {
+        return $this->db->reset_caches($tablenames);
     }
 
     /**
@@ -958,7 +937,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return database_manager The instance used to perform ddl operations.
      * @see lib/ddl/database_manager.php
      */
-		public function get_manager() {
+	public function get_manager() {
 				return $this->db->get_manager();
     }
 
@@ -983,8 +962,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param bool $state
      * @return void
      */
-		public function set_debug($state) {
-				$this->db->set_debug($state);
+	public function set_debug($state) {
+        $this->db->set_debug($state);
         $this->debug = $state;
     }
 
@@ -1012,9 +991,9 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true
      * @throws ddl_change_structure_exception A DDL specific exception is thrown for any errors.
      */
-		public function change_database_structure($sql, $tablenames = null) {
-				return $this->db->change_database_structure($sql, $tablenames);
-		}
+	public function change_database_structure($sql, $tablenames = null) {
+        return $this->db->change_database_structure($sql, $tablenames);
+    }
 
     /**
      * Executes a general sql query. Should be used only when no other method suitable.
@@ -1024,13 +1003,13 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function execute($sql, array $params=null) {
-				$span = $this->new_span('execute', $sql, ['db.sql' => $sql]);
-				
-				return $this->finish_span(
-                    $this->db->execute($sql, $params)
-                );
-		}
+	public function execute($sql, array $params=null) {
+        $span = $this->new_span('execute', $sql, ['db.sql' => $sql]);
+        
+        return $this->finish_span(
+            $this->db->execute($sql, $params)
+        );
+    }
 
     /**
      * Get a number of records as a moodle_recordset where all the given conditions met.
@@ -1066,12 +1045,15 @@ class sentry_moodle_database extends \moodle_database {
      * @return \moodle_recordset A moodle_recordset instance
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_recordset($table, array $conditions=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-				$span = $this->new_span('get_recordset', $table, ['db.table' => $table, 'db.sort' => $sort, 'db.limitfrom' => $limitfrom, 'db.limitnum' => $limitnum, 'db.fields' => $fields, 'db.conditions' => implode(' = ?, ', array_keys((array) $conditions)).' = ?']);
-				
-				return $this->finish_span(
-                    $this->db->get_recordset($table, $conditions, $sort, $fields, $limitfrom, $limitnum)
-                );
+    public function get_recordset($table, array $conditions=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
+        $conditions_span = !empty($conditions)
+            ? implode(' = ?, ', array_keys((array) $conditions)).' = ?'
+            : '*';
+        $span = $this->new_span('get_recordset', $table, ['db.table' => $table, 'db.sort' => $sort, 'db.limitfrom' => $limitfrom, 'db.limitnum' => $limitnum, 'db.fields' => $fields, 'db.conditions' => $conditions_span]);
+        
+        return $this->finish_span(
+            $this->db->get_recordset($table, $conditions, $sort, $fields, $limitfrom, $limitnum)
+        );
     }
 
     /**
@@ -1092,12 +1074,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return \moodle_recordset A moodle_recordset instance.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_recordset_list($table, $field, array $values, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-				$span = $this->new_span('get_recordset_list', $table, ['db.table' => $table, 'db.sort' => $sort, 'db.limitfrom' => $limitfrom, 'db.limitnum' => $limitnum, 'db.field' => $field]);
-				
-				return $this->finish_span(
-                    $this->db->get_recordset_list($table, $field, $values, $sort, $fields, $limitfrom, $limitnum)
-                );
+    public function get_recordset_list($table, $field, array $values, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
+        $span = $this->new_span('get_recordset_list', $table, ['db.table' => $table, 'db.sort' => $sort, 'db.limitfrom' => $limitfrom, 'db.limitnum' => $limitnum, 'db.field' => $field]);
+        
+        return $this->finish_span(
+            $this->db->get_recordset_list($table, $field, $values, $sort, $fields, $limitfrom, $limitnum)
+        );
     }
 
     /**
@@ -1118,12 +1100,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return \moodle_recordset A moodle_recordset instance.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_recordset_select($table, $select, array $params=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-				$span = $this->new_span('get_recordset_select', $select, ['db.table' => $table, 'db.sort' => $sort, 'db.limitfrom' => $limitfrom, 'db.limitnum' => $limitnum, 'db.fields' => $fields]);
-				
-				return $this->finish_span(
-                    $this->db->get_recordset_select($table, $select, $params, $sort, $fields, $limitfrom, $limitnum)
-                );
+	public function get_recordset_select($table, $select, array $params=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
+        $span = $this->new_span('get_recordset_select', $select, ['db.table' => $table, 'db.sort' => $sort, 'db.limitfrom' => $limitfrom, 'db.limitnum' => $limitnum, 'db.fields' => $fields]);
+        
+        return $this->finish_span(
+            $this->db->get_recordset_select($table, $select, $params, $sort, $fields, $limitfrom, $limitnum)
+        );
     }
 
     /**
@@ -1142,13 +1124,13 @@ class sentry_moodle_database extends \moodle_database {
      * @return \moodle_recordset A moodle_recordset instance.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_recordset_sql($sql, array $params=null, $limitfrom=0, $limitnum=0) {
-				$span = $this->new_span('get_recordset_sql', $sql, ['db.sql' => $sql, 'db.limitfrom' => $limitfrom, 'db.limitnum' => $limitnum]);
-				
-				return $this->finish_span(
-                    $this->db->get_recordset_sql($sql, $params, $limitfrom, $limitnum)
-                );
-		}
+	public function get_recordset_sql($sql, array $params=null, $limitfrom=0, $limitnum=0) {
+        $span = $this->new_span('get_recordset_sql', $sql, ['db.sql' => $sql, 'db.limitfrom' => $limitfrom, 'db.limitnum' => $limitnum]);
+        
+        return $this->finish_span(
+            $this->db->get_recordset_sql($sql, $params, $limitfrom, $limitnum)
+        );
+    }
 
     /**
      * Get all records from a table.
@@ -1184,15 +1166,15 @@ class sentry_moodle_database extends \moodle_database {
      * @return array An array of Objects indexed by first column.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_records($table, array $conditions=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-                if($conditions === null) {
-                    $conditions = [];
-                }
-				$span = $this->new_span('get_records', $table, ['db.conditions' => implode(' = ?, ', array_keys((array) $conditions)).' = ?']);
-				
-				return $this->finish_span(
-                    $this->db->get_records($table, $conditions, $sort, $fields, $limitfrom, $limitnum)
-                );
+	public function get_records($table, array $conditions=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
+        $conditions_span = !empty($conditions)
+            ? implode(' = ?, ', array_keys((array) $conditions)).' = ?'
+            : '*';
+        $span = $this->new_span('get_records', $table, ['db.conditions' => $conditions_span]);
+        
+        return $this->finish_span(
+            $this->db->get_records($table, $conditions, $sort, $fields, $limitfrom, $limitnum)
+        );
     }
 
     /**
@@ -1212,12 +1194,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return array An array of objects indexed by first column
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_records_list($table, $field, array $values, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-			$span = $this->new_span('get_records_list', $table, ['db.conditions' => implode(' = ?, ', array_keys($values)).' = ?', 'db.field' => $field, 'db.fields' => $fields]);
-
-			return $this->finish_span(
-                $this->db->get_records_list($table, $field, $values, $sort, $fields, $limitfrom, $limitnum)
-            );
+	public function get_records_list($table, $field, array $values, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
+        $span = $this->new_span('get_records_list', $table, ['db.conditions' => $field . ' = ?, ', 'db.field' => $field, 'db.fields' => $fields]);
+        
+        return $this->finish_span(
+            $this->db->get_records_list($table, $field, $values, $sort, $fields, $limitfrom, $limitnum)
+        );
     }
 
     /**
@@ -1237,12 +1219,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return array of objects indexed by first column
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_records_select($table, $select, array $params=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-				$span = $this->new_span('get_records_select', $select, ['db.fields' => $fields, 'db.sort' => $sort]);
-				
-				return $this->finish_span(
-                    $this->db->get_records_select($table, $select, $params, $sort, $fields, $limitfrom, $limitnum)
-                );
+	public function get_records_select($table, $select, array $params=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
+        $span = $this->new_span('get_records_select', $select, ['db.fields' => $fields, 'db.sort' => $sort]);
+        
+        return $this->finish_span(
+            $this->db->get_records_select($table, $select, $params, $sort, $fields, $limitfrom, $limitnum)
+        );
     }
 
     /**
@@ -1259,13 +1241,13 @@ class sentry_moodle_database extends \moodle_database {
      * @return array of objects indexed by first column
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_records_sql($sql, array $params=null, $limitfrom=0, $limitnum=0) {
-				$span = $this->new_span('get_records_sql', $sql, ['db.sql' => $sql]);
-				
-				return $this->finish_span(
-                    $this->db->get_records_sql($sql, $params, $limitfrom, $limitnum)
-                );
-		}
+	public function get_records_sql($sql, array $params=null, $limitfrom=0, $limitnum=0) {
+        $span = $this->new_span('get_records_sql', $sql, ['db.sql' => $sql]);
+        
+        return $this->finish_span(
+            $this->db->get_records_sql($sql, $params, $limitfrom, $limitnum)
+        );
+    }
 
     /**
      * Get the first two columns from a number of records as an associative array where all the given conditions met.
@@ -1286,11 +1268,14 @@ class sentry_moodle_database extends \moodle_database {
      * @return array an associative array
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_records_menu($table, array $conditions=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-            $span = $this->new_span('get_records_menu', $table, ['db.conditions' => implode(' = ?, ', array_keys((array) $conditions)).' = ?', 'db.sort' => $sort]);
-            return $this->finish_span(
-                $this->db->get_records_menu($table, $conditions, $sort, $fields, $limitfrom, $limitnum)
-            );
+	public function get_records_menu($table, array $conditions=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
+        $conditions_span = !empty($conditions)
+            ? implode(' = ?, ', array_keys((array) $conditions)).' = ?'
+            : '*';
+        $span = $this->new_span('get_records_menu', $table, ['db.conditions' => $conditions_span, 'db.sort' => $sort]);
+        return $this->finish_span(
+            $this->db->get_records_menu($table, $conditions, $sort, $fields, $limitfrom, $limitnum)
+        );
     }
 
     /**
@@ -1309,12 +1294,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return array an associative array
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_records_select_menu($table, $select, array $params=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-				$span = $this->new_span('get_records_select_menu', $select, ['db.table' => $table, 'db.select' => $select, 'db.sort' => $sort]);
-				
-				return $this->finish_span(
-                    $this->db->get_records_select_menu($table, $select, $params, $sort, $fields, $limitfrom, $limitnum)
-                );
+	public function get_records_select_menu($table, $select, array $params=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
+        $span = $this->new_span('get_records_select_menu', $select, ['db.table' => $table, 'db.select' => $select, 'db.sort' => $sort]);
+        
+        return $this->finish_span(
+            $this->db->get_records_select_menu($table, $select, $params, $sort, $fields, $limitfrom, $limitnum)
+        );
     }
 
     /**
@@ -1330,12 +1315,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return array an associative array
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_records_sql_menu($sql, array $params=null, $limitfrom=0, $limitnum=0) {
-				$span = $this->new_span('get_records_sql_menu', $sql, ['db.sql' => $sql, ]);
-				
-				return $this->finish_span(
-                    $this->db->get_records_sql_menu($sql, $params, $limitfrom, $limitnum)
-                );
+	public function get_records_sql_menu($sql, array $params=null, $limitfrom=0, $limitnum=0) {
+        $span = $this->new_span('get_records_sql_menu', $sql, ['db.sql' => $sql, ]);
+        
+        return $this->finish_span(
+            $this->db->get_records_sql_menu($sql, $params, $limitfrom, $limitnum)
+        );
     }
 
     /**
@@ -1352,12 +1337,15 @@ class sentry_moodle_database extends \moodle_database {
      * @return mixed a fieldset object containing the first matching record, false or exception if error not found depending on mode
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_record($table, array $conditions, $fields='*', $strictness=IGNORE_MISSING) {
-				$span = $this->new_span('get_record', $table, ['db.table', 'db.conditions' => implode(' = ?, ', array_keys((array) $conditions)).' = ?', 'db.fields' => $fields]);
-				
-				return $this->finish_span(
-                    $this->db->get_record($table, $conditions, $fields, $strictness)
-                );
+    public function get_record($table, array $conditions, $fields='*', $strictness=IGNORE_MISSING) {
+        $conditions_span = !empty($conditions)
+            ? implode(' = ?, ', array_keys((array) $conditions)).' = ?'
+            : '*';
+        $span = $this->new_span('get_record', $table, ['db.table', 'db.conditions' => $conditions_span, 'db.fields' => $fields]);
+        
+        return $this->finish_span(
+            $this->db->get_record($table, $conditions, $fields, $strictness)
+        );
     }
 
     /**
@@ -1373,15 +1361,15 @@ class sentry_moodle_database extends \moodle_database {
      * @return stdClass|false a fieldset object containing the first matching record, false or exception if error not found depending on mode
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_record_select($table, $select, array $params=null, $fields='*', $strictness=IGNORE_MISSING) {
-				$span = $this->new_span('get_record_select', $select, [
-                    'db.select' => $select,
-                    'db.fields' => $fields
-                ]);
-				
-				return $this->finish_span(
-                    $this->db->get_record_select($table, $select, $params, $fields, $strictness)
-                );
+	public function get_record_select($table, $select, array $params=null, $fields='*', $strictness=IGNORE_MISSING) {
+        $span = $this->new_span('get_record_select', $select, [
+            'db.select' => $select,
+            'db.fields' => $fields
+        ]);
+        
+        return $this->finish_span(
+            $this->db->get_record_select($table, $select, $params, $fields, $strictness)
+        );
     }
 
     /**
@@ -1398,14 +1386,14 @@ class sentry_moodle_database extends \moodle_database {
      * @return mixed a fieldset object containing the first matching record, false or exception if error not found depending on mode
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_record_sql($sql, array $params=null, $strictness=IGNORE_MISSING) {
-				$span = $this->new_span('get_record_sql', $sql, [
-                    'db.sql' => $sql
-                ]);
-				
-				return $this->finish_span(
-                    $this->db->get_record_sql($sql, $params, $strictness)
-                );
+	public function get_record_sql($sql, array $params=null, $strictness=IGNORE_MISSING) {
+        $span = $this->new_span('get_record_sql', $sql, [
+            'db.sql' => $sql
+        ]);
+        
+        return $this->finish_span(
+            $this->db->get_record_sql($sql, $params, $strictness)
+        );
     }
 
     /**
@@ -1420,14 +1408,17 @@ class sentry_moodle_database extends \moodle_database {
      * @return mixed the specified value false if not found
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_field($table, $return, array $conditions, $strictness=IGNORE_MISSING) {
-            $span = $this->new_span('get_field', $table, [
-                'db.table' => $table,
-                'db.conditions' => implode(' = ?, ', array_keys((array) $conditions)).' = ?'
-            ]);
-            return $this->finish_span(
-                $this->db->get_field($table, $return, $conditions, $strictness)
-            );
+	public function get_field($table, $return, array $conditions, $strictness=IGNORE_MISSING) {
+        $conditions_span = !empty($conditions)
+            ? implode(' = ?, ', array_keys((array) $conditions)).' = ?'
+            : '*';
+        $span = $this->new_span('get_field', $table, [
+            'db.table' => $table,
+            'db.conditions' => $conditions_span
+        ]);
+        return $this->finish_span(
+            $this->db->get_field($table, $return, $conditions, $strictness)
+        );
     }
 
     /**
@@ -1443,15 +1434,15 @@ class sentry_moodle_database extends \moodle_database {
      * @return mixed the specified value false if not found
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_field_select($table, $return, $select, array $params=null, $strictness=IGNORE_MISSING) {
-				$span = $this->new_span('get_field_select', $select, [
-                    'db.select' => $select,
-                    'db.table' => $table
-                ]);
-				
-				return $this->finish_span(
-                    $this->db->get_field_select($table, $return, $select, $params, $strictness)
-                );
+	public function get_field_select($table, $return, $select, array $params=null, $strictness=IGNORE_MISSING) {
+        $span = $this->new_span('get_field_select', $select, [
+            'db.select' => $select,
+            'db.table' => $table
+        ]);
+        
+        return $this->finish_span(
+            $this->db->get_field_select($table, $return, $select, $params, $strictness)
+        );
     }
 
     /**
@@ -1465,12 +1456,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return mixed the specified value false if not found
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_field_sql($sql, array $params=null, $strictness=IGNORE_MISSING) {
-				$span = $this->new_span('get_field_sql', $sql, [
-                    'db.sql' => $sql
-                ]);
-				
-				return $this->finish_span($this->db->get_field_sql($sql, $params, $strictness));
+	public function get_field_sql($sql, array $params=null, $strictness=IGNORE_MISSING) {
+        $span = $this->new_span('get_field_sql', $sql, [
+            'db.sql' => $sql
+        ]);
+        
+        return $this->finish_span($this->db->get_field_sql($sql, $params, $strictness));
     }
 
     /**
@@ -1483,14 +1474,14 @@ class sentry_moodle_database extends \moodle_database {
      * @return array of values
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_fieldset_select($table, $return, $select, array $params=null) {
-				$span = $this->new_span('get_fieldset_select', $select, [
-                    'db.select' => $select,
-                    'db.table' => $table
-                ]);
-				return $this->finish_span(
-                    $this->db->get_fieldset_select($table, $return, $select, $params)
-                );
+	public function get_fieldset_select($table, $return, $select, array $params=null) {
+        $span = $this->new_span('get_fieldset_select', $select, [
+            'db.select' => $select,
+            'db.table' => $table
+        ]);
+        return $this->finish_span(
+            $this->db->get_fieldset_select($table, $return, $select, $params)
+        );
     }
 
     /**
@@ -1501,15 +1492,15 @@ class sentry_moodle_database extends \moodle_database {
      * @return array of values
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_fieldset_sql($sql, array $params=null) {
-				$span = $this->new_span('get_fieldset_sql', $sql, [
-                    'db.sql' => $sql
-                ]);
-				
-				return $this->finish_span(
-                    $this->db->get_fieldset_sql($sql, $params)
-                );
-		}
+	public function get_fieldset_sql($sql, array $params=null) {
+        $span = $this->new_span('get_fieldset_sql', $sql, [
+            'db.sql' => $sql
+        ]);
+        
+        return $this->finish_span(
+            $this->db->get_fieldset_sql($sql, $params)
+        );
+    }
 
     /**
      * Insert new record into database, as fast as possible, no safety checks, lobs not supported.
@@ -1521,14 +1512,14 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool|int true or new id
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function insert_record_raw($table, $params, $returnid=true, $bulk=false, $customsequence=false) {
-				$span = $this->new_span('insert_record_raw', $table, [
-                    'db.table' => $table
-                ]);
-				return $this->finish_span(
-                    $this->db->insert_record_raw($table, $params, $returnid, $bulk, $customsequence)
-                );
-		}
+	public function insert_record_raw($table, $params, $returnid=true, $bulk=false, $customsequence=false) {
+        $span = $this->new_span('insert_record_raw', $table, [
+            'db.table' => $table
+        ]);
+        return $this->finish_span(
+            $this->db->insert_record_raw($table, $params, $returnid, $bulk, $customsequence)
+        );
+    }
 
     /**
      * Insert a record into a table and return the "id" field if required.
@@ -1543,14 +1534,14 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool|int true or new id
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function insert_record($table, $dataobject, $returnid=true, $bulk=false) {
-				$span = $this->new_span('insert_record', $table, [
-                    'db.table' => $table
-                ]);
-				return $this->finish_span(
-                    $this->db->insert_record($table, $dataobject, $returnid, $bulk)
-                );
-		}
+	public function insert_record($table, $dataobject, $returnid=true, $bulk=false) {
+        $span = $this->new_span('insert_record', $table, [
+            'db.table' => $table
+        ]);
+        return $this->finish_span(
+            $this->db->insert_record($table, $dataobject, $returnid, $bulk)
+        );
+    }
 
     /**
      * Insert multiple records into database as fast as possible.
@@ -1570,11 +1561,11 @@ class sentry_moodle_database extends \moodle_database {
      * @throws coding_exception if data objects have different structure
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function insert_records($table, $dataobjects) {
-				$span = $this->new_span('insert_records', $table, [
-                    'db.table' => $table
-                ]);
-				return $this->finish_span($this->db->insert_records($table, $dataobjects));
+	public function insert_records($table, $dataobjects) {
+        $span = $this->new_span('insert_records', $table, [
+            'db.table' => $table
+        ]);
+        return $this->finish_span($this->db->insert_records($table, $dataobjects));
     }
 
     /**
@@ -1586,14 +1577,14 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function import_record($table, $dataobject) {
-				$span = $this->new_span('import_record', $table, [
-                    'db.table' => $table
-                ]);
-				return $this->finish_span(
-                    $this->db->import_record($table, $dataobject)
-                );
-		}
+	public function import_record($table, $dataobject) {
+        $span = $this->new_span('import_record', $table, [
+            'db.table' => $table
+        ]);
+        return $this->finish_span(
+            $this->db->import_record($table, $dataobject)
+        );
+    }
 
     /**
      * Update record in database, as fast as possible, no safety checks, lobs not supported.
@@ -1603,12 +1594,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function update_record_raw($table, $params, $bulk=false) {
-				$span = $this->new_span('update_record_raw', $table, [
-                    'db.table' => $table
-                ]);
-				return $this->finish_span($this->db->update_record_raw($table, $params, $bulk));
-		}
+	public function update_record_raw($table, $params, $bulk=false) {
+        $span = $this->new_span('update_record_raw', $table, [
+            'db.table' => $table
+        ]);
+        return $this->finish_span($this->db->update_record_raw($table, $params, $bulk));
+    }
 
     /**
      * Update a record in a table
@@ -1623,14 +1614,14 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function update_record($table, $dataobject, $bulk=false) {
-				$span = $this->new_span('update_record', $table, [
-                    'db.table' => $table
-                ]);
-				return $this->finish_span(
-                    $this->db->update_record($table, $dataobject, $bulk)
-                );
-		}
+	public function update_record($table, $dataobject, $bulk=false) {
+        $span = $this->new_span('update_record', $table, [
+            'db.table' => $table
+        ]);
+        return $this->finish_span(
+            $this->db->update_record($table, $dataobject, $bulk)
+        );
+    }
 
     /**
      * Set a single field in every table record where all the given conditions met.
@@ -1642,13 +1633,16 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function set_field($table, $newfield, $newvalue, array $conditions=null) {
-				$span = $this->new_span('set_field', $table, [
-                    'db.table' => $table,
-                    'db.field' => $newfield,
-                    'db.conditions' => implode(' = ?, ', array_keys((array) $conditions)).' = ?'
-                ]);
-				return $this->finish_span($this->db->set_field($table, $newfield, $newvalue, $conditions));
+    public function set_field($table, $newfield, $newvalue, array $conditions=null) {
+        $conditions_span = !empty($conditions)
+            ? implode(' = ?, ', array_keys((array) $conditions)).' = ?'
+            : '*';
+        $span = $this->new_span('set_field', $table, [
+            'db.table' => $table,
+            'db.field' => $newfield,
+            'db.conditions' => $conditions_span
+        ]);
+        return $this->finish_span($this->db->set_field($table, $newfield, $newvalue, $conditions));
     }
 
     /**
@@ -1662,14 +1656,14 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function set_field_select($table, $newfield, $newvalue, $select, array $params=null) {
-				$span = $this->new_span('set_field_select', $table, [
-                    'db.table' => $table,
-                    'db.field' => $newfield,
-                    'db.select' => $select
-                ]);
-				return $this->finish_span($this->db->set_field_select($table, $newfield, $newvalue, $select, $params));
-		}
+	public function set_field_select($table, $newfield, $newvalue, $select, array $params=null) {
+        $span = $this->new_span('set_field_select', $table, [
+            'db.table' => $table,
+            'db.field' => $newfield,
+            'db.select' => $select
+        ]);
+        return $this->finish_span($this->db->set_field_select($table, $newfield, $newvalue, $select, $params));
+    }
 
 
     /**
@@ -1680,12 +1674,15 @@ class sentry_moodle_database extends \moodle_database {
      * @return int The count of records returned from the specified criteria.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function count_records($table, array $conditions=null) {
-				$span = $this->new_span('count_records', $table, [
-                    'db.table' => $table,
-                    'db.conditions' => implode(' = ?, ', array_keys((array) $conditions)).' = ?'
-                ]);
-				return $this->finish_span($this->db->count_records($table, $conditions));
+    public function count_records($table, array $conditions=null) {
+        $conditions_span = !empty($conditions)
+            ? implode(' = ?, ', array_keys((array) $conditions)).' = ?'
+            : '*';
+        $span = $this->new_span('count_records', $table, [
+            'db.table' => $table,
+            'db.conditions' => $conditions_span
+        ]);
+        return $this->finish_span($this->db->count_records($table, $conditions));
     }
 
     /**
@@ -1698,12 +1695,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return int The count of records returned from the specified criteria.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function count_records_select($table, $select, array $params=null, $countitem="COUNT('x')") {
-				$span = $this->new_span('count_records_select', $select, [
-                    'db.table' => $table,
-                    'db.select' => $select
-                ]);
-				return $this->finish_span($this->db->count_records_select($table, $select, $params, $countitem));
+	public function count_records_select($table, $select, array $params=null, $countitem="COUNT('x')") {
+        $span = $this->new_span('count_records_select', $select, [
+            'db.table' => $table,
+            'db.select' => $select
+        ]);
+        return $this->finish_span($this->db->count_records_select($table, $select, $params, $countitem));
     }
 
     /**
@@ -1719,11 +1716,11 @@ class sentry_moodle_database extends \moodle_database {
      * @return int the count
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function count_records_sql($sql, array $params=null) {
-				$span = $this->new_span('count_records_sql', $sql, [
-                    'db.sql' => $sql
-                ]);
-				return $this->finish_span($this->db->count_records_sql($sql, $params));
+	public function count_records_sql($sql, array $params=null) {
+        $span = $this->new_span('count_records_sql', $sql, [
+            'db.sql' => $sql
+        ]);
+        return $this->finish_span($this->db->count_records_sql($sql, $params));
     }
 
     /**
@@ -1734,12 +1731,15 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true if a matching record exists, else false.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function record_exists($table, array $conditions) {
-				$span = $this->new_span('record_exists', $table, [
-                    'db.table' => $table,
-                    'db.conditions' => implode(' = ?, ', array_keys((array) $conditions)).' = ?'
-                ]);
-				return $this->finish_span($this->db->record_exists($table, $conditions));
+    public function record_exists($table, array $conditions) {
+        $conditions_span = !empty($conditions)
+            ? implode(' = ?, ', array_keys((array) $conditions)).' = ?'
+            : '*';
+        $span = $this->new_span('record_exists', $table, [
+            'db.table' => $table,
+            'db.conditions' => $conditions_span
+        ]);
+        return $this->finish_span($this->db->record_exists($table, $conditions));
     }
 
     /**
@@ -1751,12 +1751,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true if a matching record exists, else false.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function record_exists_select($table, $select, array $params=null) {
-				$span = $this->new_span('record_exists_select', $table, [
-                    'db.table' => $table,
-                    'db.select' => $select
-                ]);
-				return $this->finish_span($this->db->record_exists_select($table, $select, $params));
+	public function record_exists_select($table, $select, array $params=null) {
+        $span = $this->new_span('record_exists_select', $table, [
+            'db.table' => $table,
+            'db.select' => $select
+        ]);
+        return $this->finish_span($this->db->record_exists_select($table, $select, $params));
     }
 
     /**
@@ -1770,11 +1770,11 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true if the SQL executes without errors and returns at least one record.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function record_exists_sql($sql, array $params=null) {
-				$span = $this->new_span('record_exists_sql', $sql, [
-                    'db.sql' => $sql
-                ]);
-				return $this->finish_span($this->db->record_exists_sql($sql, $params));
+	public function record_exists_sql($sql, array $params=null) {
+        $span = $this->new_span('record_exists_sql', $sql, [
+            'db.sql' => $sql
+        ]);
+        return $this->finish_span($this->db->record_exists_sql($sql, $params));
     }
 
     /**
@@ -1786,12 +1786,15 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function delete_records($table, array $conditions=null) {
-				$span = $this->new_span('delete_records', $table, [
-                    'db.table' => $table,
-                    'db.conditions' => implode(' = ?, ', array_keys((array) $conditions)).' = ?'
-                ]);
-				return $this->finish_span($this->db->delete_records($table, $conditions));
+    public function delete_records($table, array $conditions=null) {
+        $conditions_span = !empty($conditions)
+            ? implode(' = ?, ', array_keys((array) $conditions)).' = ?'
+            : '*';
+        $span = $this->new_span('delete_records', $table, [
+            'db.table' => $table,
+            'db.conditions' => $conditions_span
+        ]);
+        return $this->finish_span($this->db->delete_records($table, $conditions));
     }
 
     /**
@@ -1803,12 +1806,12 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function delete_records_list($table, $field, array $values) {
-				$span = $this->new_span('delete_records_list', $table, [
-                    'db.table' => $table,
-                    'db.field' => $field
-                ]);
-				return $this->finish_span($this->db->delete_records_list($table, $field, $values));
+	public function delete_records_list($table, $field, array $values) {
+        $span = $this->new_span('delete_records_list', $table, [
+            'db.table' => $table,
+            'db.field' => $field
+        ]);
+        return $this->finish_span($this->db->delete_records_list($table, $field, $values));
     }
 
     /**
@@ -1831,13 +1834,13 @@ class sentry_moodle_database extends \moodle_database {
      */
     public function delete_records_subquery(string $table, string $field, string $alias,
 			string $subquery, array $params = []): void {
-				$span = $this->new_span('delete_records_subquery', $table, [
-                    'db.table' => $table,
-                    'db.field' => $field,
-                    'db.subquery' => $subquery
-                ]);
-				
-				$this->finish_span($this->db->delete_records_subquery($table, $field, $alias, $subquery, $params));
+        $span = $this->new_span('delete_records_subquery', $table, [
+            'db.table' => $table,
+            'db.field' => $field,
+            'db.subquery' => $subquery
+        ]);
+        
+        $this->finish_span($this->db->delete_records_subquery($table, $field, $alias, $subquery, $params));
     }
 
     /**
@@ -1849,14 +1852,14 @@ class sentry_moodle_database extends \moodle_database {
      * @return bool true.
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function delete_records_select($table, $select, array $params=null) {
-				$span = $this->new_span('delete_records_select', $table, [
-                    'db.table' => $table,
-                    'db.select' => $select
-                ]);
-				
-				return $this->finish_span($this->db->delete_records_select($table, $select, $params));
-		}
+	public function delete_records_select($table, $select, array $params=null) {
+        $span = $this->new_span('delete_records_select', $table, [
+            'db.table' => $table,
+            'db.select' => $select
+        ]);
+        
+        return $this->finish_span($this->db->delete_records_select($table, $select, $params));
+    }
 
     /**
      * Returns the FROM clause required by some DBs in all SELECT statements.
@@ -1880,7 +1883,7 @@ class sentry_moodle_database extends \moodle_database {
      * @param int $int2 Second integer in the operation.
      * @return string The piece of SQL code to be used in your statement.
      */
-		public function sql_bitand($int1, $int2) {
+	public function sql_bitand($int1, $int2) {
 				return $this->db->sql_bitand($int1, $int2);
     }
 
@@ -1891,8 +1894,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param int $int1 The operand integer in the operation.
      * @return string The piece of SQL code to be used in your statement.
      */
-		public function sql_bitnot($int1) {
-				return $this->db->sql_bitnot($int1);
+	public function sql_bitnot($int1) {
+        return $this->db->sql_bitnot($int1);
     }
 
     /**
@@ -1921,8 +1924,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param int $int2 The second operand integer in the operation.
      * @return string The piece of SQL code to be used in your statement.
      */
-		public function sql_bitxor($int1, $int2) {
-				return $this->db->sql_bitxor($int1, $int2);
+	public function sql_bitxor($int1, $int2) {
+        return $this->db->sql_bitxor($int1, $int2);
     }
 
     /**
@@ -1933,8 +1936,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param int $int2 The second operand integer in the operation.
      * @return string The piece of SQL code to be used in your statement.
      */
-		public function sql_modulo($int1, $int2) {
-				return $this->db->sql_modulo($int1, $int2);
+	public function sql_modulo($int1, $int2) {
+        return $this->db->sql_modulo($int1, $int2);
     }
 
     /**
@@ -1944,8 +1947,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $fieldname The field (or expression) we are going to ceil.
      * @return string The piece of SQL code to be used in your ceiling statement.
      */
-		public function sql_ceil($fieldname) {
-				return $this->db->sql_ceil($fieldname);
+	public function sql_ceil($fieldname) {
+        return $this->db->sql_ceil($fieldname);
     }
 
     /**
@@ -1955,8 +1958,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $field Table field or SQL expression to be cast
      * @return string
      */
-		public function sql_cast_to_char(string $field): string {
-				return $this->db->sql_cast_to_char($field);
+	public function sql_cast_to_char(string $field): string {
+        return $this->db->sql_cast_to_char($field);
     }
 
     /**
@@ -1969,8 +1972,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param bool $text Specifies if the original column is one TEXT (CLOB) column (true). Defaults to false.
      * @return string The piece of SQL code to be used in your statement.
      */
-		public function sql_cast_char2int($fieldname, $text=false) {
-				return $this->db->sql_cast_char2int($fieldname, $text);
+	public function sql_cast_char2int($fieldname, $text=false) {
+        return $this->db->sql_cast_char2int($fieldname, $text);
     }
 
     /**
@@ -1983,8 +1986,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param bool $text Specifies if the original column is one TEXT (CLOB) column (true). Defaults to false.
      * @return string The piece of SQL code to be used in your statement.
      */
-		public function sql_cast_char2real($fieldname, $text=false) {
-				return $this->db->sql_cast_char2real($fieldname, $text);
+	public function sql_cast_char2real($fieldname, $text=false) {
+        return $this->db->sql_cast_char2real($fieldname, $text);
     }
 
     /**
@@ -1997,8 +2000,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $fieldname The name of the field to be cast
      * @return string The piece of SQL code to be used in your statement.
      */
-		public function sql_cast_2signed($fieldname) {
-				return $this->db->sql_cast_2signed($fieldname);
+	public function sql_cast_2signed($fieldname) {
+        return $this->db->sql_cast_2signed($fieldname);
     }
 
     /**
@@ -2029,8 +2032,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param bool $notequal True means not equal (<>)
      * @return string The SQL code fragment.
      */
-		public function sql_equal($fieldname, $param, $casesensitive = true, $accentsensitive = true, $notequal = false) {
-				return $this->db->sql_equal($fieldname, $param, $casesensitive, $accentsensitive, $notequal);
+	public function sql_equal($fieldname, $param, $casesensitive = true, $accentsensitive = true, $notequal = false) {
+        return $this->db->sql_equal($fieldname, $param, $casesensitive, $accentsensitive, $notequal);
     }
 
     /**
@@ -2044,8 +2047,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $escapechar The escape char for '%' and '_'.
      * @return string The SQL code fragment.
      */
-		public function sql_like($fieldname, $param, $casesensitive = true, $accentsensitive = true, $notlike = false, $escapechar = '\\') {
-				return $this->db->sql_like($fieldname, $param, $casesensitive, $accentsensitive, $notlike, $escapechar);
+    public function sql_like($fieldname, $param, $casesensitive = true, $accentsensitive = true, $notlike = false, $escapechar = '\\') {
+        return $this->db->sql_like($fieldname, $param, $casesensitive, $accentsensitive, $notlike, $escapechar);
     }
 
     /**
@@ -2054,8 +2057,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $escapechar The desired escape character, defaults to '\\'.
      * @return string The escaped sql LIKE string.
      */
-		public function sql_like_escape($text, $escapechar = '\\') {
-				return $this->db->sql_like_escape($text, $escapechar);
+    public function sql_like_escape($text, $escapechar = '\\') {
+        return $this->db->sql_like_escape($text, $escapechar);
     }
 
     /**
@@ -2067,9 +2070,14 @@ class sentry_moodle_database extends \moodle_database {
      * @return string The SQL to concatenate strings passed in.
      * @uses func_get_args()  and thus parameters are unlimited OPTIONAL number of additional field names.
      */
-		public function sql_concat() {
-				return $this->db->sql_concat();
-		}
+    public function sql_concat() {
+        $arr = func_get_args();
+        $s = implode(', ', $arr);
+        if ($s === '') {
+            return "''";
+        }
+        return "CONCAT($s)";
+    }
 
     /**
      * Returns the proper SQL to do CONCAT between the elements passed
@@ -2079,9 +2087,9 @@ class sentry_moodle_database extends \moodle_database {
      * @param array  $elements The array of strings to be concatenated.
      * @return string The SQL to concatenate the strings.
      */
-		public function sql_concat_join($separator="' '", $elements=array()) {
-				return $this->db->sql_concat_join($separator, $elements);
-		}
+    public function sql_concat_join($separator="' '", $elements=array()) {
+        return $this->db->sql_concat_join($separator, $elements);
+    }
 
     /**
      * Return SQL for performing group concatenation on given field/expression
@@ -2091,9 +2099,9 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $sort Ordering of the concatenated field
      * @return string
      */
-		public function sql_group_concat(string $field, string $separator = ', ', string $sort = ''): string {
-				return $this->db->sql_group_concat($field, $separator, $sort);
-		}
+    public function sql_group_concat(string $field, string $separator = ', ', string $sort = ''): string {
+        return $this->db->sql_group_concat($field, $separator, $sort);
+    }
 
     /**
      * Returns the proper SQL (for the dbms in use) to concatenate $firstname and $lastname
@@ -2104,8 +2112,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $last User's last name (default:'lastname').
      * @return string The SQL to concatenate strings.
      */
-		function sql_fullname($first='firstname', $last='lastname') {
-				return $this->db->sql_fullname($first, $last);
+    function sql_fullname($first='firstname', $last='lastname') {
+        return $this->db->sql_fullname($first, $last);
     }
 
     /**
@@ -2119,8 +2127,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param int $numchars The number of chars to use for the ordering (defaults to 32).
      * @return string The piece of SQL code to be used in your statement.
      */
-		public function sql_order_by_text($fieldname, $numchars=32) {
-				return $this->db->sql_order_by_text($fieldname, $numchars);
+	public function sql_order_by_text($fieldname, $numchars=32) {
+        return $this->db->sql_order_by_text($fieldname, $numchars);
     }
 
     /**
@@ -2132,8 +2140,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param int $sort An order to sort the results in.
      * @return string The piece of SQL code to be used in your statement.
      */
-		public function sql_order_by_null(string $fieldname, int $sort = SORT_ASC): string {
-				return $this->db->sql_order_by_null($fieldname, $sort);
+	public function sql_order_by_null(string $fieldname, int $sort = SORT_ASC): string {
+        return $this->db->sql_order_by_null($fieldname, $sort);
     }
 
     /**
@@ -2141,8 +2149,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $fieldname The fieldname/expression to calculate its length in characters.
      * @return string the piece of SQL code to be used in the statement.
      */
-		public function sql_length($fieldname) {
-				return $this->db->sql_length($fieldname);
+	public function sql_length($fieldname) {
+        return $this->db->sql_length($fieldname);
     }
 
     /**
@@ -2154,8 +2162,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param mixed $length Optional integer or expression evaluating to integer.
      * @return string The sql substring extraction fragment.
      */
-		public function sql_substr($expr, $start, $length=false) {
-				return $this->db->sql_substr($expr, $start, $length);
+	public function sql_substr($expr, $start, $length=false) {
+        return $this->db->sql_substr($expr, $start, $length);
     }
 
     /**
@@ -2169,8 +2177,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $haystack the SQL expression that will be searched in.
      * @return string The required searching SQL part.
      */
-		public function sql_position($needle, $haystack) {
-				return $this->db->sql_position($needle, $haystack);
+	public function sql_position($needle, $haystack) {
+        return $this->db->sql_position($needle, $haystack);
     }
 
     /**
@@ -2181,7 +2189,7 @@ class sentry_moodle_database extends \moodle_database {
      * @return string An empty string.
      */
 		function sql_empty() {
-				return $this->db->sql_empty();
+        return $this->db->sql_empty();
     }
 
     /**
@@ -2217,8 +2225,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param bool $textfield For specifying if it is a text (also called clob) field (true) or a varchar one (false)
      * @return string the sql code to be added to check for empty values
      */
-		public function sql_isempty($tablename, $fieldname, $nullablefield, $textfield) {
-				return $this->db->sql_isempty($tablename, $fieldname, $nullablefield, $textfield);
+	public function sql_isempty($tablename, $fieldname, $nullablefield, $textfield) {
+        return $this->db->sql_isempty($tablename, $fieldname, $nullablefield, $textfield);
     }
 
     /**
@@ -2251,8 +2259,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param bool $textfield Specifies if it is a text (also called clob) field (true) or a varchar one (false).
      * @return string The sql code to be added to check for non empty values.
      */
-		public function sql_isnotempty($tablename, $fieldname, $nullablefield, $textfield) {
-				return $this->db->sql_isnotempty($tablename, $fieldname, $nullablefield, $textfield);
+	public function sql_isnotempty($tablename, $fieldname, $nullablefield, $textfield) {
+        return $this->db->sql_isnotempty($tablename, $fieldname, $nullablefield, $textfield);
     }
 
     /**
@@ -2271,24 +2279,24 @@ class sentry_moodle_database extends \moodle_database {
      * @param bool $casesensitive
      * @return string or empty if not supported
      */
-		public function sql_regex($positivematch = true, $casesensitive = false) {
-				return $this->db->sql_regex($positivematch, $casesensitive);
+	public function sql_regex($positivematch = true, $casesensitive = false) {
+        return $this->db->sql_regex($positivematch, $casesensitive);
     }
 
     /**
      * Returns the word-beginning boundary marker if this database driver supports regex syntax when searching.
      * @return string The word-beginning boundary marker. Otherwise, an empty string.
      */
-		public function sql_regex_get_word_beginning_boundary_marker() {
-				return $this->db->sql_regex_get_word_beginning_boundary_marker();
+	public function sql_regex_get_word_beginning_boundary_marker() {
+        return $this->db->sql_regex_get_word_beginning_boundary_marker();
     }
 
     /**
      * Returns the word-end boundary marker if this database driver supports regex syntax when searching.
      * @return string The word-end boundary marker. Otherwise, an empty string.
      */
-		public function sql_regex_get_word_end_boundary_marker() {
-				return $this->db->sql_regex_get_word_end_boundary_marker();
+	public function sql_regex_get_word_end_boundary_marker() {
+        return $this->db->sql_regex_get_word_end_boundary_marker();
     }
 
     /**
@@ -2300,8 +2308,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $fields comma-separated list of fields (used only by some DB engines)
      * @return string SQL query that will return only values that are present in each of selects
      */
-		public function sql_intersect($selects, $fields) {
-				return $this->db->sql_intersect($selects, $fields);
+	public function sql_intersect($selects, $fields) {
+        return $this->db->sql_intersect($selects, $fields);
     }
 
     /**
@@ -2323,9 +2331,9 @@ class sentry_moodle_database extends \moodle_database {
      * @param string $search
      * @param string $replace
      */
-		public function replace_all_text($table, \database_column_info $column, $search, $replace) {
-				$span = $this->new_span('replace_all_text', $table);
-				return $this->finish_span($this->db->replace_all_text($table, $column, $search, $replace));
+	public function replace_all_text($table, \database_column_info $column, $search, $replace) {
+        $span = $this->new_span('replace_all_text', $table);
+        return $this->finish_span($this->db->replace_all_text($table, $column, $search, $replace));
     }
 
     /**
@@ -2333,8 +2341,8 @@ class sentry_moodle_database extends \moodle_database {
      *
      * @return void
      */
-		public function update_temp_table_stats() {
-				return $this->db->update_temp_table_stats();
+	public function update_temp_table_stats() {
+        return $this->db->update_temp_table_stats();
     }
 
     /**
@@ -2347,16 +2355,16 @@ class sentry_moodle_database extends \moodle_database {
      *
      * @return bool
      */
-		protected function transactions_supported() {
-				return $this->db->transactions_supported();
+	protected function transactions_supported() {
+        return $this->db->transactions_supported();
     }
 
     /**
      * Returns true if a transaction is in progress.
      * @return bool
      */
-		public function is_transaction_started() {
-				return $this->db->is_transaction_started();
+	public function is_transaction_started() {
+        return $this->db->is_transaction_started();
     }
 
     /**
@@ -2365,8 +2373,8 @@ class sentry_moodle_database extends \moodle_database {
      * @return void
      * @throws dml_transaction_exception if stansaction active
      */
-		public function transactions_forbidden() {
-				return $this->db->transactions_forbidden();
+	public function transactions_forbidden() {
+        return $this->db->transactions_forbidden();
     }
 
     /**
@@ -2386,8 +2394,8 @@ class sentry_moodle_database extends \moodle_database {
      *
      * @return \moodle_transaction
      */
-		public function start_delegated_transaction() {
-				return $this->db->start_delegated_transaction();
+	public function start_delegated_transaction() {
+        return $this->db->start_delegated_transaction();
     }
 
     /**
@@ -2395,9 +2403,9 @@ class sentry_moodle_database extends \moodle_database {
      * this can not be used directly in code.
      * @return void
      */
-		protected function begin_transaction() {
-				return $this->db->begin_transaction();
-		}
+	protected function begin_transaction() {
+        return $this->db->begin_transaction();
+    }
 
     /**
      * Indicates delegated transaction finished successfully.
@@ -2407,8 +2415,8 @@ class sentry_moodle_database extends \moodle_database {
      * @return void
      * @throws \dml_transaction_exception Creates and throws transaction related exceptions.
      */
-		public function commit_delegated_transaction(\moodle_transaction $transaction) {
-				return $this->db->commit_delegated_transaction($transaction);
+	public function commit_delegated_transaction(\moodle_transaction $transaction) {
+        return $this->db->commit_delegated_transaction($transaction);
     }
 
     /**
@@ -2416,9 +2424,9 @@ class sentry_moodle_database extends \moodle_database {
      * this can not be used directly in code.
      * @return void
      */
-		protected function commit_transaction() {
-				return $this->db->commit_transaction();
-		}
+	protected function commit_transaction() {
+        return $this->db->commit_transaction();
+    }
 
     /**
      * Call when delegated transaction failed, this rolls back
@@ -2432,8 +2440,8 @@ class sentry_moodle_database extends \moodle_database {
      * @param Exception|Throwable $e The related exception/throwable to this transaction rollback.
      * @return void This does not return, instead the exception passed in will be rethrown.
      */
-		public function rollback_delegated_transaction(\moodle_transaction $transaction, $e) {
-				return $this->db->rollback_delegated_transaction($transaction, $e);
+	public function rollback_delegated_transaction(\moodle_transaction $transaction, $e) {
+        return $this->db->rollback_delegated_transaction($transaction, $e);
     }
 
     /**
@@ -2441,9 +2449,9 @@ class sentry_moodle_database extends \moodle_database {
      * this can not be used directly in code.
      * @return void
      */
-		protected function rollback_transaction() {
-				return $this->db->rollback_transaction();
-		}
+	protected function rollback_transaction() {
+        return $this->db->rollback_transaction();
+    }
 
     /**
      * Force rollback of all delegated transaction.
@@ -2454,16 +2462,16 @@ class sentry_moodle_database extends \moodle_database {
      *
      * @return void
      */
-		public function force_transaction_rollback() {
-				return $this->db->force_transaction_rollback();
+	public function force_transaction_rollback() {
+        return $this->db->force_transaction_rollback();
     }
 
     /**
      * Is session lock supported in this driver?
      * @return bool
      */
-		public function session_lock_supported() {
-				return $this->db->session_lock_supported();
+	public function session_lock_supported() {
+        return $this->db->session_lock_supported();
     }
 
     /**
@@ -2473,8 +2481,8 @@ class sentry_moodle_database extends \moodle_database {
      * @return void
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function get_session_lock($rowid, $timeout) {
-				return $this->db->get_session_lock($rowid, $timeout);
+	public function get_session_lock($rowid, $timeout) {
+        return $this->db->get_session_lock($rowid, $timeout);
     }
 
     /**
@@ -2483,56 +2491,56 @@ class sentry_moodle_database extends \moodle_database {
      * @return void
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
-		public function release_session_lock($rowid) {
-				return $this->db->release_session_lock($rowid);
+	public function release_session_lock($rowid) {
+        return $this->db->release_session_lock($rowid);
     }
 
     /**
      * Returns the number of reads done by this database.
      * @return int Number of reads.
      */
-		public function perf_get_reads() {
-				return $this->db->perf_get_reads();
+	public function perf_get_reads() {
+        return $this->db->perf_get_reads();
     }
 
     /**
      * Returns whether we want to connect to slave database for read queries.
      * @return bool Want read only connection
      */
-		public function want_read_slave(): bool {
-				return $this->db->want_read_slave();
+	public function want_read_slave(): bool {
+        return $this->db->want_read_slave();
     }
 
     /**
      * Returns the number of reads before first write done by this database.
      * @return int Number of reads.
      */
-		public function perf_get_reads_slave(): int {
-				return $this->db->perf_get_reads_slave();
+	public function perf_get_reads_slave(): int {
+        return $this->db->perf_get_reads_slave();
     }
 
     /**
      * Returns the number of writes done by this database.
      * @return int Number of writes.
      */
-		public function perf_get_writes() {
-				return $this->db->perf_get_writes();
+	public function perf_get_writes() {
+        return $this->db->perf_get_writes();
     }
 
     /**
      * Returns the number of queries done by this database.
      * @return int Number of queries.
      */
-		public function perf_get_queries() {
-				return $this->db->perf_get_queries();
+	public function perf_get_queries() {
+        return $this->db->perf_get_queries();
     }
 
     /**
      * Time waiting for the database engine to finish running all queries.
      * @return float Number of seconds with microseconds
      */
-		public function perf_get_queries_time() {
-				return $this->db->perf_get_queries_time();
+	public function perf_get_queries_time() {
+        return $this->db->perf_get_queries_time();
     }
 
     /**
@@ -2540,7 +2548,7 @@ class sentry_moodle_database extends \moodle_database {
      *
      * @return bool
      */
-		public function is_fulltext_search_supported() {
-				return $this->db->is_fulltext_search_supported();
+	public function is_fulltext_search_supported() {
+        return $this->db->is_fulltext_search_supported();
     }
 }

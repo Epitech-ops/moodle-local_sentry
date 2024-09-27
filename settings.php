@@ -78,6 +78,12 @@ if ($hassiteconfig) {
             new lang_string('tracing_hosts_desc', 'local_sentry'),
             '*'
         ));
+        $settingspage->add(new admin_setting_configcheckbox(
+            'local_sentry/include_user_data',
+            new lang_string('include_user_data', 'local_sentry'),
+            new lang_string('include_user_data_desc', 'local_sentry'),
+            0
+        ));
     }
 
     $ADMIN->add('localplugins', $settingspage);
