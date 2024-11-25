@@ -1889,13 +1889,8 @@ class sentry_moodle_database extends \moodle_database {
      * @return string The SQL to concatenate strings passed in.
      * @uses func_get_args()  and thus parameters are unlimited OPTIONAL number of additional field names.
      */
-    public function sql_concat() {
-        $arr = func_get_args();
-        $s = implode(', ', $arr);
-        if ($s === '') {
-            return "''";
-        }
-        return "CONCAT($s)";
+    public function sql_concat(...$arr) {
+        return $this->db->sql_concat(...$arr);
     }
 
     /**
