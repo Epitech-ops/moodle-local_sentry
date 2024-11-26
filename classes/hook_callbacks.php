@@ -29,12 +29,13 @@ class hook_callbacks {
     /**
      * Runs before HTTP headers.
      *
-     * @param \core\hook\output\before_http_headers $hook
+     * @param \core\hook\output\before_standard_head_html_generation $hook
      */
-    public static function before_http_headers(\core\hook\output\before_http_headers $hook): void {
+    public static function before_standard_head_html_generation(\core\hook\output\before_standard_head_html_generation $hook): string {
         if(!empty(\local_sentry\sentry::get_config('tracking_javascript'))) {
-            \local_sentry\sentry::get_js_loader_script_html();
+            return \local_sentry\sentry::get_js_loader_script_html();
         }
+        return '';
     }
 
     /**
