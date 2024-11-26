@@ -33,9 +33,8 @@ class hook_callbacks {
      */
     public static function before_http_headers(\core\hook\output\before_http_headers $hook): void {
         if(!empty(\local_sentry\sentry::get_config('tracking_javascript'))) {
-            return \local_sentry\sentry::get_js_loader_script_html();
+            \local_sentry\sentry::get_js_loader_script_html();
         }
-        return '';
     }
 
     /**
