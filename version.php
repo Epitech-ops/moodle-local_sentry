@@ -20,7 +20,7 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2024112600;
+$plugin->version = 2024112601;
 $plugin->requires = 2022112800; // Moodle 4.1 or newer
 $plugin->component = 'local_sentry';
 $plugin->maturity = MATURITY_ALPHA;
