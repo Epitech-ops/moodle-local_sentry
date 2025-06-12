@@ -84,6 +84,28 @@ if ($hassiteconfig) {
             new lang_string('include_user_data_desc', 'local_sentry'),
             0
         ));
+        // configure sample rate
+        $settingspage->add(new admin_setting_configtext(
+            'local_sentry/sample_rate',
+            new lang_string('sample_rate', 'local_sentry'),
+            new lang_string('sample_rate_desc', 'local_sentry'),
+            '1'
+        ));
+        // configure traces_sample_rate
+        $settingspage->add(new admin_setting_configtext(
+            'local_sentry/traces_sample_rate',
+            new lang_string('traces_sample_rate', 'local_sentry'),
+            new lang_string('traces_sample_rate_desc', 'local_sentry'),
+            '1'
+        ));
+        // configure profiles_sample_rate
+        $settingspage->add(new admin_setting_configtext(
+            'local_sentry/profiles_sample_rate',
+            new lang_string('profiles_sample_rate', 'local_sentry'),
+            new lang_string('profiles_sample_rate_desc', 'local_sentry'),
+            '1'
+        ));
+
     }
 
     $ADMIN->add('localplugins', $settingspage);

@@ -28,7 +28,8 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Main Sentry management class
  */
-class sentry {
+class sentry
+{
     const HTTP_X_UNIQUE_ID = "HTTP_X_UNIQUE_ID";
 
     private static $_initialized = false;
@@ -50,30 +51,37 @@ class sentry {
         'tracking_php' => false,
         'tracing_db' => false,
         'tracing_hosts' => false,
-        'include_user_data' => false
+        'include_user_data' => false,
+        'sample_rate' => false,
+        'traces_sample_rate' => false,
+        'profiles_sample_rate' => false,
     ];
 
     /**
      * Construct and set up the class and its instance.
      */
-    public function __construct() {
-    }
+    public function __construct() {}
 
     /**
      * Sets up Sentry.
      * To be run as early as possible.
      */
-    public static function setup() {
-        if(empty(self::get_config('autoload_path')) ||
-            !is_file(self::get_config('autoload_path'))) {
+    public static function setup()
+    {
+        if (
+            empty(self::get_config('autoload_path')) ||
+            !is_file(self::get_config('autoload_path'))
+        ) {
             return;
         }
-        if(empty(self::get_config('dsn'))) {
+        if (empty(self::get_config('dsn'))) {
             return;
         }
-        if(empty(self::get_config('tracking_php')) &&
+        if (
+            empty(self::get_config('tracking_php')) &&
             empty(self::get_config('tracking_javascript')) &&
-            empty(self::get_config('tracing_db'))) {
+            empty(self::get_config('tracing_db'))
+        ) {
             return;
         }
         // Include Sentry library.
@@ -82,13 +90,14 @@ class sentry {
             self::get_config('dsn'),
             self::get_config('environment'),
             self::get_config('release'),
-            1.0,
-            1.0
+            self::get_config('sample_rate'),
+            self::get_config('traces_sample_rate'),
+            self::get_config('profiles_sample_rate')
         );
-        if(!empty(self::get_config('tracking_php'))) {
+        if (!empty(self::get_config('tracking_php'))) {
             self::setup_exception_handler();
         }
-        if(!empty(self::get_config('tracing_db'))) {
+        if (!empty(self::get_config('tracing_db'))) {
             self::setup_db();
         }
     }
@@ -99,35 +108,38 @@ class sentry {
      * @param string $name Setting name
      * @return string|int|array $settings
      */
-    public static function get_config($name = "") {
-        if(!empty($name)) {
-            if(self::$_settings_status[$name]) {
+    public static function get_config($name = "")
+    {
+        if (!empty($name)) {
+            if (self::$_settings_status[$name]) {
                 return self::$_config[$name];
             } else {
                 self::$_config[$name] = get_config('local_sentry', $name);
                 self::$_settings_status[$name] = true;
-                switch($name) {
+                switch ($name) {
                     case 'tracing_hosts':
                         $hosts = explode(',', self::$_config[$name]);
                         self::$_config[$name] = array_map('trim', $hosts);
                         break;
                     case 'sample_rate':
+                    case 'profiles_sample_rate':
                     case 'traces_sample_rate':
                         self::$_config[$name] *= 1.0;
                         break;
                 }
             }
         } else {
-            foreach(self::$_settings_status as $name => $isset) {
-                if(!$isset) {
+            foreach (self::$_settings_status as $name => $isset) {
+                if (!$isset) {
                     self::$_config[$name] = get_config('local_sentry', $name);
                     self::$_settings_status[$name] = true;
-                    switch($name) {
+                    switch ($name) {
                         case 'tracing_hosts':
                             $hosts = explode(',', self::$_config[$name]);
                             self::$_config[$name] = array_map('trim', $hosts);
                             break;
                         case 'sample_rate':
+                        case 'profiles_sample_rate':
                         case 'traces_sample_rate':
                             self::$_config[$name] *= 1.0;
                             break;
@@ -141,12 +153,13 @@ class sentry {
     /**
      * Sets up the custom $DB object
      */
-    public static function setup_db() {
+    public static function setup_db()
+    {
         global $DB;
-        if(!self::initialized()) {
+        if (!self::initialized()) {
             return;
         }
-        if(self::dsn_is_set() && self::tracing_enabled()) {
+        if (self::dsn_is_set() && self::tracing_enabled()) {
             $db = new sentry_moodle_database(false, $DB);
             $DB = $db;
         }
@@ -155,10 +168,13 @@ class sentry {
     /**
      * Sets up the custom exception handler
      */
-    public static function setup_exception_handler() {
-        if(!self::dsn_is_set() ||
+    public static function setup_exception_handler()
+    {
+        if (
+            !self::dsn_is_set() ||
             empty(self::get_config('tracking_php')) ||
-            !function_exists('\Sentry\captureException')) {
+            !function_exists('\Sentry\captureException')
+        ) {
             return;
         }
         set_exception_handler('\local_sentry\sentry::exception_handler');
@@ -167,24 +183,27 @@ class sentry {
     /**
      * Starts the main transaction
      */
-    public static function start_main_transaction() {
+    public static function start_main_transaction()
+    {
         global $CFG;
-        if(!function_exists('\Sentry\startTransaction') ||
+        if (
+            !function_exists('\Sentry\startTransaction') ||
             !self::tracing_enabled() ||
             !self::dsn_is_set() ||
-            self::$_transaction_started) {
+            self::$_transaction_started
+        ) {
             // Sentry not loaded in config.php or
             // tracing is not active.
             return;
         }
-    
+
         $uri = empty($_SERVER['REQUEST_URI']) ? 'UNKNOWN' : $_SERVER['REQUEST_URI'];
-        if(defined('CLI_SCRIPT') && CLI_SCRIPT) {
+        if (defined('CLI_SCRIPT') && CLI_SCRIPT) {
             $uri = 'CLI_SCRIPT';
-            if(!empty($_SERVER['PHP_SELF'])) {
+            if (!empty($_SERVER['PHP_SELF'])) {
                 $rootlen = strlen($CFG->dirroot);
                 $uri = $_SERVER['PHP_SELF'];
-                if($CFG->dirroot === substr($uri, 0, $rootlen)) {
+                if ($CFG->dirroot === substr($uri, 0, $rootlen)) {
                     $uri = trim(substr($uri, $rootlen), '/');
                 }
             }
@@ -194,7 +213,7 @@ class sentry {
             $parentSampled = false
         );
         $transactionContext->setSampled(true);
-    
+
         self::$_transaction = \Sentry\startTransaction($transactionContext);
         self::$_transaction_started = true;
         return self::$_transaction;
@@ -203,16 +222,19 @@ class sentry {
     /**
      * Finishes the main transaction
      */
-    public static function finish_main_transaction() {
-        if(self::initialized() &&
+    public static function finish_main_transaction()
+    {
+        if (
+            self::initialized() &&
             self::tracing_enabled() &&
             !empty(self::$_transaction) &&
-            empty(self::$_transaction_finished)) {
-            if(!empty(self::$_spans)) {
-                for($i=count(self::$_spans)-1; $i>=0; $i--) {
+            empty(self::$_transaction_finished)
+        ) {
+            if (!empty(self::$_spans)) {
+                for ($i = count(self::$_spans) - 1; $i >= 0; $i--) {
                     self::$_spans[$i]->finish();
-                    if(isset(self::$_spans[$i-1])) {
-                        \Sentry\SentrySdk::getCurrentHub()->setSpan(self::$_spans[$i-1]);
+                    if (isset(self::$_spans[$i - 1])) {
+                        \Sentry\SentrySdk::getCurrentHub()->setSpan(self::$_spans[$i - 1]);
                     } else {
                         \Sentry\SentrySdk::getCurrentHub()->setSpan(self::$_transaction);
                     }
@@ -230,7 +252,8 @@ class sentry {
      *
      * @return \Sentry\Tracing\Transaction|null
      */
-    public static function get_transaction() {
+    public static function get_transaction()
+    {
         return self::$_transaction;
     }
 
@@ -243,31 +266,34 @@ class sentry {
      * @param int $backtrace_unset_levels
      * @return \Sentry\Tracing\Span
      */
-    public static function start_span($op, $description = "", $data = [], $backtrace_unset_levels = 1) {
-        if(!self::initialized() ||
-            !self::tracing_enabled()) {
+    public static function start_span($op, $description = "", $data = [], $backtrace_unset_levels = 1)
+    {
+        if (
+            !self::initialized() ||
+            !self::tracing_enabled()
+        ) {
             return;
         }
-        if(!empty(self::$_spans)) {
-            for($i=count(self::$_spans)-1; $i>=0; $i--) {
+        if (!empty(self::$_spans)) {
+            for ($i = count(self::$_spans) - 1; $i >= 0; $i--) {
                 $parent = array_pop(self::$_spans);
                 self::$_spans = array_values(self::$_spans);
-                if(is_object($parent)) {
+                if (is_object($parent)) {
                     break;
                 }
             }
         } else {
             $parent = self::get_transaction();
         }
-        if(empty($parent)) {
+        if (empty($parent)) {
             return null;
         }
         $spanCtx = new \Sentry\Tracing\SpanContext();
         $spanCtx->setOp($op);
         $spanCtx->setDescription($description);
         $backtrace = debug_backtrace();
-        for($i=count($backtrace)-1; $i>count($backtrace)-1-$backtrace_unset_levels; $i--) {
-            if(!empty($backtrace[$i])) {
+        for ($i = count($backtrace) - 1; $i > count($backtrace) - 1 - $backtrace_unset_levels; $i--) {
+            if (!empty($backtrace[$i])) {
                 unset($backtrace[$i]);
             }
         }
@@ -275,7 +301,7 @@ class sentry {
             'stacktrace' => $backtrace,
             'db.operation' => $op
         ];
-        foreach($data as $key => $value) {
+        foreach ($data as $key => $value) {
             $ctxdata[$key] = $value;
         }
         $backtrace = array_values($backtrace);
@@ -293,23 +319,26 @@ class sentry {
      * @param array|stdClass|int|null|bool $return
      * @return array|stdClass|int|null|bool $return
      */
-    public static function finish_span($return = null) {
-        if(!self::initialized() ||
-            !self::tracing_enabled()) {
+    public static function finish_span($return = null)
+    {
+        if (
+            !self::initialized() ||
+            !self::tracing_enabled()
+        ) {
             return $return;
         }
-        if(count(self::$_spans) > 0) {
+        if (count(self::$_spans) > 0) {
             // $span->finish();
-            for($i=count(self::$_spans)-1; $i>=0; $i--) {
+            for ($i = count(self::$_spans) - 1; $i >= 0; $i--) {
                 $span = array_pop(self::$_spans);
                 self::$_spans = array_values(self::$_spans);
-                if(is_object($span)) {
+                if (is_object($span)) {
                     break;
                 }
             }
-            
+
             $span->finish();
-            if(count(self::$_spans) > 0 && !empty(end(self::$_spans))) {
+            if (count(self::$_spans) > 0 && !empty(end(self::$_spans))) {
                 \Sentry\SentrySdk::getCurrentHub()->setSpan(end(self::$_spans));
             } else {
                 \Sentry\SentrySdk::getCurrentHub()->setSpan(self::$_transaction);
@@ -326,19 +355,22 @@ class sentry {
      *
      * @param \Exception $ex
      */
-    public static function exception_handler($ex) {
-        if(function_exists('\Sentry\captureException') &&
+    public static function exception_handler($ex)
+    {
+        if (
+            function_exists('\Sentry\captureException') &&
             self::initialized() &&
-            !empty(self::get_config('tracking_php'))) {
-            if(!empty(self::$_spans)) {
+            !empty(self::get_config('tracking_php'))
+        ) {
+            if (!empty(self::$_spans)) {
                 // Finish the remaining spans.
-                for($i=count(self::$_spans)-1;$i>=0;$i--) {
-                    if(\is_object(self::$_spans[$i])) {
+                for ($i = count(self::$_spans) - 1; $i >= 0; $i--) {
+                    if (\is_object(self::$_spans[$i])) {
                         self::$_spans[$i]->finish();
                     }
                 }
             }
-            if(!empty(self::$_transaction)) {
+            if (!empty(self::$_transaction)) {
                 // Finish the main transaction.
                 self::$_transaction->finish();
             }
@@ -352,19 +384,22 @@ class sentry {
     /**
      * Set user and tag data
      */
-    private static function set_scope() {
+    private static function set_scope()
+    {
         \Sentry\configureScope(function (\Sentry\State\Scope $scope): void {
             global $USER;
-            if(!empty($USER) &&
-                    !empty($USER->id) &&
-                    !empty(self::get_config('include_user_data'))) {
+            if (
+                !empty($USER) &&
+                !empty($USER->id) &&
+                !empty(self::get_config('include_user_data'))
+            ) {
                 $scope->setUser([
                     'email' => $USER->email,
                     'username' => $USER->username,
                     'id' => $USER->id,
                 ]);
             }
-            if(!empty($_SERVER[self::HTTP_X_UNIQUE_ID])) {
+            if (!empty($_SERVER[self::HTTP_X_UNIQUE_ID])) {
                 $scope->setTag('traceid_header_name', $_SERVER[self::HTTP_X_UNIQUE_ID]);
             }
         });
@@ -375,16 +410,28 @@ class sentry {
      *
      * @return bool
      */
-    public static function tracing_enabled() {
+    public static function tracing_enabled()
+    {
         $hostname = php_uname('n');
-        if(empty(self::get_config('tracing_db'))) {
+        if (empty(self::get_config('tracing_db'))) {
             return false;
         }
-	    return !empty(self::get_config('tracing_hosts')) &&
+        return !empty(self::get_config('tracing_hosts')) &&
             (in_array($hostname, self::get_config('tracing_hosts')) ||
-            in_array('*', self::get_config('tracing_hosts')));
+                in_array('*', self::get_config('tracing_hosts')));
     }
 
+    /**
+     * Returns whether profiling is enabled
+     *
+     * @return bool
+     */
+    public static function profiling_enabled()
+    {
+        return !empty(self::get_config('profiles_sample_rate')) &&
+            self::get_config('profiles_sample_rate') > 0.0;
+    }
+    
     /**
      * Initialize Sentry
      *
@@ -394,34 +441,41 @@ class sentry {
      * @param string $release This build release
      * @param float $sample_rate
      * @param float $traces_sample_rate
+     * @param float $profiles_sample_rate
      */
-    public static function init($autoload_path, $dsn, $environment = 'testing', $release = '10001', $sample_rate = 1.0, $traces_sample_rate = 1.0) {
-        if(empty($dsn) ||
-            self::initialized()) {
+    public static function init($autoload_path, $dsn, $environment = 'testing', $release = '10001', $sample_rate = 1.0, $traces_sample_rate = 1.0, $profiles_sample_rate = 1.0)
+    {
+        if (
+            empty($dsn) ||
+            self::initialized()
+        ) {
             return;
         }
-    
+
         // $CFG->sentry_autoload_path = "/srv/composer/vendor/autoload.php";
         // $CFG->sentry_dsn = 'https://id-string@sentry.server.si/project-id';
         // $CFG->sentry_tracing_hosts = ['moodle.server.si'];
-        if(file_exists($autoload_path)) {
+        if (file_exists($autoload_path)) {
             $options = [
                 'dsn' => $dsn,
                 'environment' => $environment,
                 'release' => $release,
             ];
-            if(self::tracing_enabled()) {
+            if (self::tracing_enabled()) {
                 $options['sample_rate'] = $sample_rate;
                 $options['traces_sample_rate'] = $traces_sample_rate;
             }
+            if (self::profiling_enabled()) {
+                $options['profiles_sample_rate'] = $profiles_sample_rate;
+            }
             require $autoload_path;
-            if(!function_exists('\Sentry\init')) {
+            if (!function_exists('\Sentry\init')) {
                 return;
             }
             try {
                 \Sentry\init($options);
-            } catch(\Exception $e) {
-                error_log("ERROR INITIALIZING SENTRY: ".$e->getMessage());
+            } catch (\Exception $e) {
+                error_log("ERROR INITIALIZING SENTRY: " . $e->getMessage());
                 // Failed to init Sentry,
                 // return uninitialized.
                 return;
@@ -443,13 +497,14 @@ class sentry {
      * @param array $options additional options affecting the file serving
      * @return bool false if the file not found, just send the file otherwise and do not return anything
      */
-    public static function pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+    public static function pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array())
+    {
         global $CFG;
 
         if ($filearea !== 'sentry') {
             return false;
         }
-        if(empty(self::dsn_is_set())) {
+        if (empty(self::dsn_is_set())) {
             // DSN is not set, return.
             return false;
         }
@@ -458,17 +513,17 @@ class sentry {
         if (!$args) {
             $filepath = '/';
         } else {
-            $filepath = '/'.implode('/', $args).'/';
+            $filepath = '/' . implode('/', $args) . '/';
         }
         $lifetime = !empty($CFG->filelifetime) ? $CFG->filelifetime : \DAYSECS;
-        switch($filename) {
+        switch ($filename) {
             case 'sentry.loader.js':
                 // Send Headers
                 header('Content-Type: ' . 'application/javascript');
                 header('Content-Disposition: attachment; filename="' . $filename . '"');
                 header('Content-Transfer-Encoding: binary');
                 header('Accept-Ranges: bytes');
-                
+
                 // Send Headers: Prevent Caching of File
                 // header('Cache-Control: private');
                 // header('Pragma: private');
@@ -481,10 +536,10 @@ class sentry {
                 exit();
             case 'sentry.bundle.min.js':
             case 'sentry.bundle.min.js.map':
-                send_file($CFG->dirroot.'/local/sentry/assets/js/'.$filename, $filename, $lifetime);
+                send_file($CFG->dirroot . '/local/sentry/assets/js/' . $filename, $filename, $lifetime);
                 break;
             default:
-                error_log("sentry: unknown filename: ".$filename);
+                error_log("sentry: unknown filename: " . $filename);
                 return false;
         }
         return false;
@@ -495,7 +550,8 @@ class sentry {
      *
      * @return bool
      */
-    public static function dsn_is_set() {
+    public static function dsn_is_set()
+    {
         return !empty(self::get_config('dsn'));
     }
 
@@ -504,8 +560,9 @@ class sentry {
      *
      * @return string
      */
-    private static function dsn() {
-        return self::dsn_is_set()? self::get_config('dsn') : '';
+    private static function dsn()
+    {
+        return self::dsn_is_set() ? self::get_config('dsn') : '';
     }
 
     /**
@@ -513,7 +570,8 @@ class sentry {
      *
      * @return bool
      */
-    public static function initialized() {
+    public static function initialized()
+    {
         return !empty(self::$_initialized);
     }
 
@@ -522,8 +580,9 @@ class sentry {
      *
      * @return string
      */
-    public static function get_js_loader_url() {
-        if(empty(self::dsn_is_set())) {
+    public static function get_js_loader_url()
+    {
+        if (empty(self::dsn_is_set())) {
             // No DSN specified, no loading necessary
             return '';
         }
@@ -543,9 +602,10 @@ class sentry {
      *
      * @return string
      */
-    public static function get_js_loader_script_html() {
+    public static function get_js_loader_script_html()
+    {
         $url = self::get_js_loader_url();
-        if(empty($url)) {
+        if (empty($url)) {
             return '';
         }
         return '<script src="' .
@@ -558,7 +618,8 @@ class sentry {
      *
      * @return string
      */
-    public static function get_js_bundle_url() {
+    public static function get_js_bundle_url()
+    {
         return new \moodle_url('/local/sentry/assets/js/sentry.bundle.min.js');
     }
 
@@ -566,8 +627,9 @@ class sentry {
      * Resets stored config values to re-read them.
      * Used in testing.
      */
-    public static function reset_config() {
-        foreach(self::$_settings_status as $name => $status) {
+    public static function reset_config()
+    {
+        foreach (self::$_settings_status as $name => $status) {
             self::$_settings_status[$name] = false;
         }
         self::$_config = [];

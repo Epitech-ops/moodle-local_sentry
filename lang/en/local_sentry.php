@@ -44,3 +44,10 @@ $string['tracing_hosts'] = 'Tracing Hosts';
 $string['tracing_hosts_desc'] = 'Enable tracing operations on a list of servers, separated by commas. Use "<i>*</i>" to enable tracing on all hosts.';
 $string['include_user_data'] = 'Include User Data';
 $string['include_user_data_desc'] = 'Include user ID, username and email in Sentry events.';
+
+$string['sample_rate'] = 'Sample Rate';
+$string['sample_rate_desc'] = 'The sample rate for events sent to Sentry. A value of 1.0 means all events are sent, while a value of 0.1 means 10% of events are sent.';
+$string['traces_sample_rate'] = 'Traces Sample Rate';
+$string['traces_sample_rate_desc'] = 'The sample rate for traces sent to Sentry. A value of 1.0 means all traces are sent, while a value of 0.1 means 10% of traces are sent.';
+$string['profiles_sample_rate'] = 'Profiles Sample Rate';
+$string['profiles_sample_rate_desc'] = 'The sample rate for profiles sent to Sentry. A value of 1.0 means all profiles are sent, while a value of 0.1 means 10% of profiles are sent.';
