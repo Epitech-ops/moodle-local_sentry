@@ -113,6 +113,9 @@ class sentry {
                         break;
                     case 'sample_rate':
                     case 'traces_sample_rate':
+                    case 'replays_sample_rate':
+                    case 'replays_session_sample_rate':
+                    case 'replays_on_error_sample_rate':
                         self::$_config[$name] *= 1.0;
                         break;
                 }
@@ -129,6 +132,9 @@ class sentry {
                             break;
                         case 'sample_rate':
                         case 'traces_sample_rate':
+                        case 'replays_sample_rate':
+                        case 'replays_session_sample_rate':
+                        case 'replays_on_error_sample_rate':
                             self::$_config[$name] *= 1.0;
                             break;
                     }

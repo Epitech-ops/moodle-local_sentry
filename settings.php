@@ -84,6 +84,41 @@ if ($hassiteconfig) {
             new lang_string('include_user_data_desc', 'local_sentry'),
             0
         ));
+
+        $settingspage->add(new admin_setting_configtext(
+            'local_sentry/sample_rate',
+            new lang_string('sample_rate', 'local_sentry'),
+            new lang_string('sample_rate_desc', 'local_sentry'),
+            1.0
+        ));
+
+        $settingspage->add(new admin_setting_configtext(
+            'local_sentry/traces_sample_rate',
+            new lang_string('traces_sample_rate', 'local_sentry'),
+            new lang_string('traces_sample_rate_desc', 'local_sentry'),
+            1.0
+        ));
+
+        $settingspage->add(new admin_setting_configtext(
+            'local_sentry/replays_sample_rate',
+            new lang_string('replays_sample_rate', 'local_sentry'),
+            new lang_string('replays_sample_rate_desc', 'local_sentry'),
+            1.0
+        ));
+
+        $settingspage->add(new admin_setting_configtext(
+            'local_sentry/replays_session_sample_rate',
+            new lang_string('replays_session_sample_rate', 'local_sentry'),
+            new lang_string('replays_session_sample_rate_desc', 'local_sentry'),
+            1.0
+        ));
+
+        $settingspage->add(new admin_setting_configtext(
+            'local_sentry/replays_on_error_sample_rate',
+            new lang_string('replays_on_error_sample_rate', 'local_sentry'),
+            new lang_string('replays_on_error_sample_rate_desc', 'local_sentry'),
+            1.0
+        ));
     }
 
     $ADMIN->add('localplugins', $settingspage);
